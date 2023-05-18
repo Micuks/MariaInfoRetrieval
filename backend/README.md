@@ -5,6 +5,7 @@
     - [About the search engine](#about-the-search-engine)
     - [Process the query](#process-the-query)
     - [Ranking documents](#ranking-documents)
+      - [Cosine similarity for vector space model](#cosine-similarity-for-vector-space-model)
 
 > Information retrieval system in Go
 
@@ -49,3 +50,28 @@ segmentation.
 ### Ranking documents
 
 The vector space model represents documents and queries as vectors in a high-dimensional space, where each unique word in the corpus is a dimension. The relevance of a document to a query is then computed as the cosine of the angle between the document vector and the query vector.
+
+#### Cosine similarity for vector space model
+
+```go
+func cosineSimilarity(vector1, vector2 map[string]float64) float64 {
+	dotProduct := 0.0
+	magnitude1 := 0.0
+	magnitude2 := 0.0
+	for _, value := range vector1 {
+		dotProduct += value * vector2[value]
+		magnitude1 += value * value
+	}
+	for _, value := range vector2 {
+		magnitude2 += value * value
+	}
+	return dotProduct / (math.Sqrt(magnitude1) * math.Sqrt((magnitude2)))
+}
+```
+
+In this code, DocumentVector is a struct that contains a Document and a Vector, which is a map from words to their term frequencies. BuildIndex now calls buildDocumentVector to construct the document vectors.
+
+The SearchIndex function has been modified to build a query vector and calculate the cosine similarity between the query vector and each document vector, rather than using the TF-IDF model.
+
+buildQueryVector is a helper function to construct the query vector, and
+cosineSimilarity calculates the cosine similarity between two vectors.

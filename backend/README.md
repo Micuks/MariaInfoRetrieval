@@ -6,6 +6,9 @@
     - [Process the query](#process-the-query)
     - [Ranking documents](#ranking-documents)
       - [Cosine similarity for vector space model](#cosine-similarity-for-vector-space-model)
+      - [TF-IDF](#tf-idf)
+        - [TF](#tf)
+        - [IDF](#idf)
 
 > Information retrieval system in Go
 
@@ -51,6 +54,12 @@ segmentation.
 
 The vector space model represents documents and queries as vectors in a high-dimensional space, where each unique word in the corpus is a dimension. The relevance of a document to a query is then computed as the cosine of the angle between the document vector and the query vector.
 
+Based on the basic vector space model, I improved it by introducing term
+weighting and normalization as below.
+
+1. Use the TF-IDF score for term weighting.
+2. Normalize document and query vectors to unit length.
+
 #### Cosine similarity for vector space model
 
 ```go
@@ -75,3 +84,23 @@ The SearchIndex function has been modified to build a query vector and calculate
 
 buildQueryVector is a helper function to construct the query vector, and
 cosineSimilarity calculates the cosine similarity between two vectors.
+
+#### TF-IDF
+
+##### TF
+
+Term frequency works by looking at the frequency of a particular term you are concerned with relative to the document.
+
+$$
+tf(t, d) = \frac{count(t)}{\sum_{w\in d}{count(w)}}
+$$
+
+##### IDF
+
+Inverse document frequency looks at how common (or uncommon) a word is amongst the corpus. IDF is calculated as follows where t is the term (word) we are looking to measure the commonness of and N is the number of documents (d) in the corpus (D).. The denominator is simply the number of documents in which the term, t, appears in.
+
+$$
+idf(t, D) = log(\frac{N}{count(d\in D:t\in d)})
+$$
+
+The reason we need IDF is to help correct for words like “of”, “as”, “the”, etc. since they appear frequently in an English corpus. Thus by taking inverse document frequency, we can minimize the weighting of frequent terms while making infrequent terms have a higher impact.

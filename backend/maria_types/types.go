@@ -1,11 +1,11 @@
 package maria_types
 
 type Document struct {
-	Id      string
-	Title   string
-	Content string
-	URL     string
-	Date    string
+	Id      string `json:"id"`
+	Title   string `json:"title"`
+	Content string `json:"content"`
+	URL     string `json:"url"`
+	Date    string `json:"date"`
 }
 
 type SearchResult struct {

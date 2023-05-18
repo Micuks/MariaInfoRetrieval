@@ -17,6 +17,10 @@ func LoadDocuments(dir string) ([]Document, error) {
 	var documents []Document
 
 	for _, file := range files {
+		// Ignore files whose filename are not ended with .json extension
+		if filepath.Ext(file.Name()) != ".json" {
+			continue
+		}
 		filename := filepath.Join(dir, file.Name())
 
 		f, err := os.Open(filename)

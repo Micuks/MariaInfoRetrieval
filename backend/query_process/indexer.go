@@ -3,6 +3,7 @@ package query_process
 import (
 	. "MariaInfoRetrieval/maria_types"
 	"errors"
+	"log"
 	"math"
 	"sort"
 	"strings"
@@ -60,11 +61,14 @@ func buildDocumentVector(doc Document) DocumentVector {
 }
 
 func SearchIndex(queryWords []string) ([]SearchResult, error) {
+	logger := log.Default()
+
 	if len(queryWords) == 0 {
 		return nil, errors.New("empty query")
 	}
 
 	queryVector := buildQueryVector(queryWords)
+	logger.Print(queryVector)
 
 	// Use a map to eliminate duplicates and update scores
 	scoreMap := make(map[string]*SearchResult)

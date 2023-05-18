@@ -5,6 +5,7 @@ import (
 	"MariaInfoRetrieval/query_process"
 	"log"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,7 +13,10 @@ import (
 // var index map[string][]Document
 
 func main() {
+	logger := log.Default()
+
 	r := gin.Default()
+	r.Use(cors.Default())
 
 	// Load and index documents
 	docs, err := data_process.LoadDocuments("./data")
@@ -23,17 +27,20 @@ func main() {
 
 	r.GET("/search", func(c *gin.Context) {
 		q := c.Query("q")
+		logger.Print(q)
 
 		// Process the query
 		queryWords := query_process.ProcessQuery(q)
+		logger.Print(queryWords)
 
 		// Search the index and calculate scores
 		results, err := query_process.SearchIndex(queryWords)
 		if err != nil {
-			c.JSON(500, gin.H{"error": "Eror fetching documents"})
+			c.JSON(500, gin.H{"error": "Error fetching documents"})
 			return
 		}
 
+		logger.Print(results)
 		c.JSON(200, results)
 	})
 

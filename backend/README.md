@@ -9,6 +9,7 @@
       - [TF-IDF](#tf-idf)
         - [TF](#tf)
         - [IDF](#idf)
+    - [Results sorting](#results-sorting)
 
 > Information retrieval system in Go
 
@@ -104,3 +105,23 @@ idf(t, D) = log(\frac{N}{count(d\in D:t\in d)})
 $$
 
 The reason we need IDF is to help correct for words like “of”, “as”, “the”, etc. since they appear frequently in an English corpus. Thus by taking inverse document frequency, we can minimize the weighting of frequent terms while making infrequent terms have a higher impact.
+
+### Results sorting
+
+When processing a search request, after gettings result scores computed by
+vector space model introduced as above, the following things are also taken into
+account: the frequency of query words, the document length, and the positions of query words.
+
+In `SearchIndex` function, it introduces a score adjustment based on the
+frequency of query words, the document length, and the position of the first
+query word in the document.
+
+It uses a map to eliminate duplicate documents and to update the score of a
+document each time it is encountered.
+
+It adjusts the score of each document based on several factors:
+
+- The frequency of the query words in the document. The more often the query words appear in the document, the higher the score.
+- The length of the document. The longer the document, the lower the score. This helps to prevent very long documents from getting artificially high scores simply because they have more words.
+- The position of the first query word in the document. The sooner a query word appears in the document, the higher the score.
+- These adjustments are added to the cosine similarity score to produce the final score for each document.

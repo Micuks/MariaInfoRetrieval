@@ -4,7 +4,6 @@ import SearchResults from "./components/SearchResults";
 import { SearchResult } from "./utils/types";
 import logo from "./logo.svg";
 import "./App.css";
-import { response } from "express";
 
 const App: React.FC = () => {
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -12,14 +11,16 @@ const App: React.FC = () => {
   const handleSearch = (query: string) => {
     fetch(`http://localhost:9011/search?q=${query}`)
       .then((response) => response.json())
-      .then((data) =>
+      .then((data) => {
+        console.debug(`Get results ${data}`);
+        console.debug(data);
         setResults(
-          data.hits.hits.map((hit: any) => ({
-            score: hit._score,
-            ...hit._source,
+          data.map((item: any) => ({
+            score: item.score,
+            ...item.document,
           }))
-        )
-      );
+        );
+      });
   };
 
   return (

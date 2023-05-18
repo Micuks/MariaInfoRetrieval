@@ -41,8 +41,11 @@ In the context of the question, we need to achieve a few things:
 2. Build an inverted index.
 3. Implement a vector space model for search and ranking.
 
-The Go language does not directly support Chinese text splitting in its standard library, and the Jieba library is specific to Python. However, there is a Go version of Jieba available named "gojieba", which you can use for Chinese word segmentation.
+The Go language does not directly support Chinese text splitting in its standard
+library, and the Jieba library is specific to Python. However, there is a Go
+version of Jieba available named "gojieba", I use this for Chinese word
+segmentation.
 
 ### Ranking documents
 
-The most commonly used model for this purpose is the TF-IDF (Term Frequency - Inverse Document Frequency) model, which ranks documents by calculating a score for each document based on the frequency of query words in the document and the inverse document frequency of query words.
+The vector space model represents documents and queries as vectors in a high-dimensional space, where each unique word in the corpus is a dimension. The relevance of a document to a query is then computed as the cosine of the angle between the document vector and the query vector.

@@ -13,8 +13,6 @@ import (
 // var index map[string][]Document
 
 func main() {
-	logger := log.Default()
-
 	r := gin.Default()
 	r.Use(cors.Default())
 
@@ -27,11 +25,10 @@ func main() {
 
 	r.GET("/search", func(c *gin.Context) {
 		q := c.Query("q")
-		logger.Print(q)
 
 		// Process the query
 		queryWords := query_process.ProcessQuery(q)
-		logger.Print(queryWords)
+		log.Default().Print(queryWords)
 
 		// Search the index and calculate scores
 		results, err := query_process.SearchIndex(queryWords)
@@ -40,7 +37,7 @@ func main() {
 			return
 		}
 
-		logger.Print(results)
+		log.Default().Print(results)
 		c.JSON(200, results)
 	})
 

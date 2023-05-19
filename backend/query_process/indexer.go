@@ -24,10 +24,12 @@ func BuildIndex(documents []Document) {
 	for _, doc := range documents {
 		vector := buildDocumentVector(doc)
 		words := ProcessQuery(doc.Content)
+		log.Default().Print("words: ", words)
 		for _, word := range words {
 			if _, ok := idfMap[word]; !ok {
 				idfMap[word] = math.Log(totalDocs / float64(len(index[word])))
 			}
+			log.Default().Print(word, index[word], vector)
 			index[word] = append(index[word], vector)
 		}
 	}
@@ -130,6 +132,9 @@ func buildQueryVector(queryWords []string) map[string]float64 {
 		vector[word] = tfIdf
 		magnitude += tfIdf * tfIdf
 	}
+
+	log.Default().Print(idfMap)
+	log.Default().Print(magnitude)
 
 	// Divide each term's TF-IDF score with the magnitude to get the unit vector
 	for word := range vector {

@@ -1,0 +1,26 @@
+.SearchResults {
+    padding: 20px;
+    margin: auto;
+    max-width: 900px;
+}
+
+.SearchResultItem {
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: #f5f5f5;
+    border-radius: 10px;
+    box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.3);
+    overflow: hidden;
+}
+
+.SearchResultItem h2 {
+    margin-top: 0;
+}
+
+.SearchResultItem p {
+    white-space: pre-line;
+}
+
+.SearchResultItem-unfold {
+    cursor: pointer;
+}

@@ -3,10 +3,11 @@ package query_process
 import (
 	. "MariaInfoRetrieval/maria_types"
 	"errors"
-	"log"
 	"math"
 	"sort"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type DocumentVector struct {
@@ -15,29 +16,52 @@ type DocumentVector struct {
 }
 
 var index = make(map[string][]DocumentVector)
+var docs []Document
 var idfMap = make(map[string]float64) // To hold IDF values of all terms
+var epsilon = 1e-10
 
 // Build the index and calculate the IDF for all terms
 func BuildIndex(documents []Document) {
-	totalDocs := float64(len(documents))
+	// Store documents
+	docs = documents
 
+	totalDocs := float64(len(documents))
+	docIndex := make(map[string][]Document)
+
+	// First, build the index
 	for _, doc := range documents {
-		vector := buildDocumentVector(doc)
-		words := ProcessQuery(doc.Content)
-		log.Default().Print("words: ", words)
+		words := WordSplit(doc.Content)
 		for _, word := range words {
-			if _, ok := idfMap[word]; !ok {
-				idfMap[word] = math.Log(totalDocs / float64(len(index[word])))
-			}
-			log.Default().Print(word, index[word], vector)
-			index[word] = append(index[word], vector)
+			docIndex[word] = append(docIndex[word], doc)
 		}
 	}
+
+	log.Debug("totalDocs:", totalDocs)
+	// Second, calculate the IDF values for all words
+	for word := range docIndex {
+		if _, ok := idfMap[word]; !ok {
+			idfMap[word] = math.Log(totalDocs / float64(len(docIndex[word])))
+		}
+		log.Debug("word:", word, " len(docIndex[]):", len(docIndex[word]), " idfMap[word]:", idfMap[word])
+	}
+
+	// Third, build index of []DocumentVector
+	for _, doc := range documents {
+		docVector := buildDocumentVector(doc)
+		words := WordSplit(doc.Content)
+
+		for _, word := range words {
+			index[word] = append(index[word], docVector)
+		}
+	}
+
+	log.Debug("index:", index)
+	log.Debug("idfMap:", idfMap)
 }
 
 func buildDocumentVector(doc Document) DocumentVector {
 	vector := make(map[string]float64)
-	words := ProcessQuery(doc.Content)
+	words := WordSplit(doc.Content)
 	wordCount := float64(len(words))
 
 	// Calculate TF for each term in the document
@@ -54,23 +78,41 @@ func buildDocumentVector(doc Document) DocumentVector {
 		magnitude += tfIdf * tfIdf
 	}
 
-	// Divide each term's TF-IDF score with the magnitude to get the unit vector
-	for word := range vector {
-		vector[word] /= math.Sqrt(magnitude)
+	if magnitude > 0.0 {
+
+		sqrtMagnitude := math.Sqrt(magnitude + epsilon)
+
+		// Divide each term's TF-IDF score with the magnitude to get the unit vector
+		for word := range vector {
+			vector[word] /= sqrtMagnitude
+		}
 	}
 
 	return DocumentVector{Doc: doc, Vector: vector}
 }
 
 func SearchIndex(queryWords []string) ([]SearchResult, error) {
-	logger := log.Default()
-
 	if len(queryWords) == 0 {
 		return nil, errors.New("empty query")
 	}
 
 	queryVector := buildQueryVector(queryWords)
-	logger.Print(queryVector)
+	log.Debug("queryVector:", queryVector)
+
+	// Handle the situation when the query words exist in all or none documents
+	magnigude := 0.0
+	for _, tfidf := range queryVector {
+		magnigude += tfidf * tfidf
+	}
+	if magnigude == 0 {
+		log.Debug("Query made up of words in every or no documents. Returning all documents.")
+		results := make([]SearchResult, 0, len(docs))
+		for _, doc := range docs {
+			results = append(results, SearchResult{Doc: doc, Score: 0.0})
+		}
+
+		return results, nil
+	}
 
 	// Use a map to eliminate duplicates and update scores
 	scoreMap := make(map[string]*SearchResult)
@@ -81,10 +123,11 @@ func SearchIndex(queryWords []string) ([]SearchResult, error) {
 		if vectors, ok := index[word]; ok {
 			for _, vector := range vectors {
 				score := cosineSimilarity(queryVector, vector.Vector)
+				log.Debug("score:", score)
 
 				// Adjust the score based on frequency of query words, document
 				// length, and position of first query word
-				frequency := float64(len(ProcessQuery(vector.Doc.Content)))
+				frequency := float64(len(WordSplit(vector.Doc.Content)))
 				position := float64(strings.Index(vector.Doc.Content, word))
 				length := float64(len(vector.Doc.Content))
 
@@ -101,6 +144,12 @@ func SearchIndex(queryWords []string) ([]SearchResult, error) {
 			}
 		}
 	}
+
+	log.Debug(">>> scoreMap")
+	for k, v := range scoreMap {
+		log.Debug(k, ":", "Doc:", v.Doc, "Score:", v.Score)
+	}
+	log.Debug("<<< scoreMap")
 
 	// Convert the scoreMap to a slice
 	results := make([]SearchResult, 0, len(scoreMap))
@@ -128,17 +177,26 @@ func buildQueryVector(queryWords []string) map[string]float64 {
 	// Multiply TF with IDF for each term to get TF-IDF score and normalize the vector
 	magnitude := 0.0
 	for word, tf := range vector {
-		tfIdf := idfMap[word] * tf
+		idf, ok := idfMap[word]
+		if !ok {
+			// Skip non-indexed words
+			continue
+		}
+		log.Debug("word:", word, " tf:", tf, " idf:", idf)
+		tfIdf := idf * tf
 		vector[word] = tfIdf
 		magnitude += tfIdf * tfIdf
 	}
 
-	log.Default().Print(idfMap)
-	log.Default().Print(magnitude)
+	if magnitude > 0.0 {
+		sqrtMagnitude := math.Sqrt(magnitude + epsilon)
+		log.Debug("magnitude:", magnitude, " sqrtMagnitude:", sqrtMagnitude)
 
-	// Divide each term's TF-IDF score with the magnitude to get the unit vector
-	for word := range vector {
-		vector[word] /= magnitude
+		// Divide each term's TF-IDF score with the magnitude to get the unit vector
+		// Only if magnitude is non-zero
+		for word := range vector {
+			vector[word] /= sqrtMagnitude
+		}
 	}
 
 	return vector
@@ -155,5 +213,8 @@ func cosineSimilarity(vector1, vector2 map[string]float64) float64 {
 	for _, value := range vector2 {
 		magnitude2 += value * value
 	}
-	return dotProduct / (math.Sqrt(magnitude1) * math.Sqrt((magnitude2)))
+
+	sqrtEpsMag1 := math.Sqrt(magnitude1 + epsilon)
+	sqrtEpsMag2 := math.Sqrt(magnitude2 + epsilon)
+	return dotProduct / (sqrtEpsMag1 * sqrtEpsMag2)
 }

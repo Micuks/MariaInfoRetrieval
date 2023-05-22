@@ -1,4 +1,4 @@
-package document_process
+package data_process
 
 import (
 	. "MariaInfoRetrieval/maria_types"

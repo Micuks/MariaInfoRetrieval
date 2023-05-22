@@ -8,7 +8,7 @@ import (
 	"github.com/yanyiwu/gojieba"
 )
 
-func ProcessQuery(query string) []string {
+func WordSplit(query string) []string {
 	defer func() {
 		if panicInfo := recover(); panicInfo != nil {
 			fmt.Printf("%v, %s", panicInfo, string(debug.Stack()))

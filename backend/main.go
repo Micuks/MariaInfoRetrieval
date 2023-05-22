@@ -1,13 +1,21 @@
 package main
 
 import (
-	data_process "MariaInfoRetrieval/data_process"
+	"MariaInfoRetrieval/data_process"
 	"MariaInfoRetrieval/query_process"
-	"log"
+	"os"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
+
+func init() {
+	log.SetFormatter(&log.TextFormatter{})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.DebugLevel)
+	// log.SetReportCaller(true)
+}
 
 // Global variable to hold our "index"
 // var index map[string][]Document
@@ -19,7 +27,7 @@ func main() {
 	// Load and index documents
 	docs, err := data_process.LoadDocuments("./data")
 	if err != nil {
-		log.Fatalf("Failed to load documents: %v", err)
+		log.Error("Failed to load documents: %v", err)
 	}
 	query_process.BuildIndex(docs)
 
@@ -27,8 +35,8 @@ func main() {
 		q := c.Query("q")
 
 		// Process the query
-		queryWords := query_process.ProcessQuery(q)
-		log.Default().Print(queryWords)
+		queryWords := query_process.WordSplit(q)
+		log.Debug("queryWords:", queryWords)
 
 		// Search the index and calculate scores
 		results, err := query_process.SearchIndex(queryWords)
@@ -37,7 +45,7 @@ func main() {
 			return
 		}
 
-		log.Default().Print(results)
+		log.Debug(results)
 		c.JSON(200, results)
 	})
 

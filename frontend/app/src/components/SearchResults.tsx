@@ -1,38 +1,35 @@
+import { renderToString } from "react-dom/server";
 import "./SearchResults.css";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SearchResult } from "../utils/types";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { dark as codeTheme } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { createRoot } from "react-dom/client";
+import { atomDark as codeTheme } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 interface SearchResultProps {
   result: SearchResult;
 }
 
 const SearchResultItem: React.FC<SearchResultProps> = ({ result }) => {
-  const contentRef = useRef<HTMLDivElement | null>(null);
+  const [content, setContent] = useState("");
   const [isFolded, setIsFolded] = useState(true); // new state
   const toggleFold = () => setIsFolded(!isFolded); // function to toggle the fold
 
   useEffect(() => {
-    if (contentRef.current) {
-      const divElement = contentRef.current;
-      let parser = new DOMParser();
-      let doc = parser.parseFromString(result.content, "text/html");
-      let codeBlocks = doc.querySelectorAll("pre code");
+    let parser = new DOMParser();
+    let doc = parser.parseFromString(result.content, "text/html");
+    let codeBlocks = doc.querySelectorAll("pre");
 
-      codeBlocks.forEach((block) => {
-        let replacement = document.createElement("div");
-        let codeString = block.textContent || "";
-        createRoot(replacement).render(
-          <SyntaxHighlighter language="cpp" style={codeTheme}>
-            {codeString}
-          </SyntaxHighlighter>
-        );
-        block.parentElement?.replaceChild(replacement, block);
-      });
-      divElement.innerHTML = doc.body.innerHTML;
-    }
+    codeBlocks.forEach((block) => {
+      let codeString = block.textContent || "";
+      let highlightedCodeString = renderToString(
+        <SyntaxHighlighter language="cpp" style={codeTheme}>
+          {codeString}
+        </SyntaxHighlighter>
+      );
+      block.innerHTML = highlightedCodeString;
+    });
+
+    setContent(doc.body.innerHTML);
   }, [result]);
 
   return (
@@ -40,10 +37,7 @@ const SearchResultItem: React.FC<SearchResultProps> = ({ result }) => {
       <h2 onClick={toggleFold}>
         <div dangerouslySetInnerHTML={{ __html: result.title }} />
       </h2>
-      {!isFolded && (
-        // <div dangerouslySetInnerHTML={{ __html: result.content }} />
-        <div ref={contentRef} />
-      )}
+      {!isFolded && <div dangerouslySetInnerHTML={{ __html: content }} />}
       <p>{result.url}</p>
       <p>{result.date}</p>
       <p>Relevance: {result.score}</p>

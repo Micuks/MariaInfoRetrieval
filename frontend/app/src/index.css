@@ -11,12 +11,6 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
-  background-color: #2f363d; /* dark gray similar to GitHub Dark Mode */
-  color: #ffffff; /* light gray text color similar to GitHub Dark Mode */
-  /* color: #8b949e; light gray text color similar to GitHub Dark Mode */
-  padding: 0.2em 0.4em;
-  margin: 0;
-  font-size: 85%;
   border-radius: 6px;
   border: 1px solid #21262d; /* border color slightly darker than the background */
 }
@@ -26,8 +20,8 @@ pre {
   overflow: auto;
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
-  border-radius: 6px;
   background-color: #2f363d; /* dark gray similar to GitHub Dark Mode */
+  border-radius: 6px;
   border: 1px solid #21262d; /* border color slightly darker than the background */
   color: #8b949e; /* light gray text color similar to GitHub Dark Mode */
 }

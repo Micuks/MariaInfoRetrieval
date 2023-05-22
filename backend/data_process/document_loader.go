@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 func LoadDocuments(dir string) ([]Document, error) {
@@ -36,6 +37,16 @@ func LoadDocuments(dir string) ([]Document, error) {
 		}
 
 		documents = append(documents, docs...)
+	}
+
+	// Convert document from escaped Unicode format to Unicode format
+	for _, doc := range documents {
+		// Convert title
+		sTitle := strconv.QuoteToASCII(doc.Title)
+		doc.Title = sTitle[1 : len(sTitle)-1]
+		// Convert content
+		sUnicode := strconv.QuoteToASCII(doc.Content)
+		doc.Content = sUnicode[1 : len(sUnicode)-1]
 	}
 
 	return documents, nil

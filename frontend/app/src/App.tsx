@@ -7,9 +7,10 @@ import "./App.css";
 
 const App: React.FC = () => {
   const [results, setResults] = useState<SearchResult[]>([]);
+  const backend_url = "http://10.128.170.37:9011";
 
   const handleSearch = (query: string) => {
-    fetch(`http://localhost:9011/search?q=${query}`)
+    fetch(`${backend_url}/search?q=${query}`)
       .then((response) => response.json())
       .then((data) => {
         console.debug(data);

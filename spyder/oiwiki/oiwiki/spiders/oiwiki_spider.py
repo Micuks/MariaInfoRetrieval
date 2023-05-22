@@ -56,13 +56,15 @@ class OiwikiSpiderSpider(scrapy.Spider):
 
     def parse_section(self, response, section="Unknown"):
         # Scrapy section details
-        content = response.xpath('//div[@class="md-content"]//blockquote[1]/preceding-sibling::*[not(self::a)]').getall()
+        content = response.xpath(
+            '//div[@class="md-content"]//blockquote[1]/preceding-sibling::*[not(self::a)]'
+        ).getall()
 
-        self.id = self.id+1
+        self.id = self.id + 1
         yield {
             "id": str(self.id),
             "title": content[0],
-            "content": "\n".join(para for para in content),
+            "content": "".join(para for para in content),
             "url": response.url,
             "date": datetime.date.today().strftime("%Y-%m-%d"),
         }

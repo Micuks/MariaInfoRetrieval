@@ -3,3 +3,4 @@ backend/MariaInfoRetrieval
 **/.env
 **/__pycache__
 spyder/oiwiki/output.json
+spyder/oiwiki.json

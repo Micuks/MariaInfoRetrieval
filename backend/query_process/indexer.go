@@ -108,7 +108,7 @@ func SearchIndex(queryWords []string) ([]SearchResult, error) {
 		log.Debug("Query made up of words in every or no documents. Returning all documents.")
 		results := make([]SearchResult, 0, len(docs))
 		for _, doc := range docs {
-			results = append(results, SearchResult{Doc: doc, Score: 0.0})
+			results = append(results, SearchResult{Doc: doc, Score: 1.0})
 		}
 
 		return results, nil

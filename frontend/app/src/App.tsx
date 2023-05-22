@@ -12,12 +12,11 @@ const App: React.FC = () => {
     fetch(`http://localhost:9011/search?q=${query}`)
       .then((response) => response.json())
       .then((data) => {
-        console.debug(`Get results ${data}`);
         console.debug(data);
         setResults(
           data.map((item: any) => ({
-            score: item.score,
-            ...item.document,
+            score: item.Score,
+            ...item.Doc,
           }))
         );
       });
@@ -27,9 +26,7 @@ const App: React.FC = () => {
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logl" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
+        <p>Maria Info Retrieval System</p>
         <SearchBox onSearch={handleSearch} />
         <SearchResults results={results} />
         <a

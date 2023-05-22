@@ -14,7 +14,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results }) => {
           <p>{result.content}</p>
           <p>{result.url}</p>
           <p>{result.date}</p>
-          <p>Relecanve: {result.score}</p>
+          <p>Relevance: {result.score}</p>
         </div>
       ))}
     </div>

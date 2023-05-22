@@ -8,15 +8,14 @@ import (
 	"github.com/yanyiwu/gojieba"
 )
 
+var seg *gojieba.Jieba = gojieba.NewJieba()
+
 func WordSplit(query string) []string {
 	defer func() {
 		if panicInfo := recover(); panicInfo != nil {
 			fmt.Printf("%v, %s", panicInfo, string(debug.Stack()))
 		}
 	}()
-
-	seg := gojieba.NewJieba()
-	defer seg.Free()
 
 	words := seg.Cut(query, true) // Use Jeba for Chinese text segment
 	words = whitespaceFilter(words)

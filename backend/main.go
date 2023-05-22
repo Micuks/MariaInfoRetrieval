@@ -13,7 +13,7 @@ import (
 func init() {
 	log.SetFormatter(&log.TextFormatter{})
 	log.SetOutput(os.Stdout)
-	log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.InfoLevel)
 	// log.SetReportCaller(true)
 }
 

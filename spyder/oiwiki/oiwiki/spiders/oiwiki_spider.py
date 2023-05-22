@@ -1,4 +1,5 @@
 import datetime
+import string
 import scrapy
 import logging
 
@@ -62,7 +63,7 @@ class OiwikiSpiderSpider(scrapy.Spider):
 
         self.id = self.id+1
         yield {
-            "id": self.id,
+            "id": string(self.id),
             "title": content[0],
             "content": "\n".join(para for para in content),
             "url": response.url,

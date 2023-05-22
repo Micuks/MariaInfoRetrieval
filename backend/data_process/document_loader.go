@@ -29,13 +29,13 @@ func LoadDocuments(dir string) ([]Document, error) {
 		}
 		defer f.Close()
 
-		var doc Document
+		var docs []Document
 		dec := json.NewDecoder(f)
-		if err := dec.Decode(&doc); err != nil {
+		if err := dec.Decode(&docs); err != nil {
 			return nil, err
 		}
 
-		documents = append(documents, doc)
+		documents = append(documents, docs...)
 	}
 
 	return documents, nil

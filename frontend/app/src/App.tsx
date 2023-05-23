@@ -53,6 +53,8 @@ const App: React.FC = () => {
         setIsSearching={setIsSearching}
       />
       {isSearching && <p className="Notification">Searching...</p>}
+      {/* Placeholder */}
+      {isSearching && <div className="Placeholder"></div>}
       <SearchResults results={results} />
     </div>
   );

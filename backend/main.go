@@ -34,7 +34,8 @@ func main() {
 	query_process.BuildIndex(docs)
 
 	// Global search result cache
-	cache := query_process.NewCache()
+	cache_capacity := 10
+	cache := query_process.NewCache(cache_capacity)
 
 	r.GET("/search", func(c *gin.Context) {
 		q := c.Query("q")
@@ -74,6 +75,18 @@ func main() {
 
 		log.Debug(results)
 		c.JSON(200, results)
+	})
+
+	// Fetch SearchResult content details
+	r.GET("/document", func(c *gin.Context) {
+		id := c.Query("id")
+		// Search for the document with the given id in docs
+		doc, found := query_process.GetFullDoc(id)
+		if !found {
+			c.JSON(404, gin.H{"error": "Document" + id + " not found"})
+		}
+
+		c.JSON(200, doc)
 	})
 
 	r.Run(":9011")

@@ -16,6 +16,7 @@ type DocumentVector struct {
 }
 
 var index = make(map[string][]DocumentVector)
+var idDocMap = make(map[string]Document)
 var docs []Document
 var idfMap = make(map[string]float64) // To hold IDF values of all terms
 var epsilon = 1e-10
@@ -32,6 +33,9 @@ func BuildIndex(documents []Document) {
 	for _, doc := range documents {
 		// Build the summary
 		doc.Summary = calculateSummary(doc.Content)
+
+		// Build the idDocMap
+		idDocMap[doc.Id] = doc
 
 		// Build the index
 		words := WordSplit(doc.Content)
@@ -142,18 +146,22 @@ func SearchIndex(queryWords []string, page, resultsPerPage int) ([]SearchResult,
 					// If the document is already in the scoreMap, update its score
 					result.Score += score
 				} else {
-					// If the document is not in the scoreMap, add it
+					// If the document is not in the scoreMap, add it with
+					// ContentFetched set to false
+					doc := vector.Doc
+					doc.Content = doc.Summary
+					doc.ContentFetched = false
 					scoreMap[vector.Doc.Id] = &SearchResult{Doc: vector.Doc, Score: score}
 				}
 			}
 		}
 	}
 
-	log.Debug(">>> scoreMap")
-	for k, v := range scoreMap {
-		log.Debug(k, ":", "Doc:", v.Doc, "Score:", v.Score)
-	}
-	log.Debug("<<< scoreMap")
+	// log.Debug(">>> scoreMap")
+	// for k, v := range scoreMap {
+	// 	log.Debug(k, ":", "Doc:", v.Doc, "Score:", v.Score)
+	// }
+	// log.Debug("<<< scoreMap")
 
 	// Convert the scoreMap to a slice
 	results := make([]SearchResult, 0, len(scoreMap))
@@ -179,6 +187,11 @@ func SearchIndex(queryWords []string, page, resultsPerPage int) ([]SearchResult,
 	results = results[start:end]
 
 	return results, nil
+}
+
+func GetFullDoc(id string) (Document, bool) {
+	doc, ok := idDocMap[id]
+	return doc, ok
 }
 
 func buildQueryVector(queryWords []string) map[string]float64 {

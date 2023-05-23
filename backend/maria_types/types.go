@@ -1,12 +1,13 @@
 package maria_types
 
 type Document struct {
-	Id      string `json:"id"`
-	Title   string `json:"title"`
-	Content string `json:"content"`
-	URL     string `json:"url"`
-	Date    string `json:"date"`
-	Summary string `json:"summary"`
+	Id             string `json:"id"`
+	Title          string `json:"title"`
+	Content        string `json:"content"`
+	URL            string `json:"url"`
+	Date           string `json:"date"`
+	Summary        string `json:"summary"`
+	ContentFetched bool
 }
 
 type SearchResult struct {

@@ -1,5 +1,7 @@
 .App {
   text-align: left;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
 }
 
 .App-logo {
@@ -23,6 +25,8 @@
   justify-content: center;
   font-size: calc(14px + 0.1vmin);
   color: white;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
 }
 
 .App-link {

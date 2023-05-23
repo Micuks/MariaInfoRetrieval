@@ -15,14 +15,17 @@ const SearchBox: React.FC<SearchBoxProps> = ({ onSearch }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <div className="SearchBox">
       <input
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search..."
       />
-      <button type="submit">Search</button>
-    </form>
+      <button type="submit" onClick={handleSubmit}>
+        Search
+      </button>
+    </div>
   );
 };
 

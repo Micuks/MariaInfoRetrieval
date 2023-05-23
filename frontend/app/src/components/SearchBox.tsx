@@ -21,6 +21,13 @@ const SearchBox: React.FC<SearchBoxProps> = ({
     onSearch(query, 1); // 1 as the initial page number
   };
 
+  const handleKeyDown = (key: string) => {
+    if (key === "Enter") {
+      setIsSearching(true);
+      onSearch(query, 1);
+    }
+  };
+
   console.debug(`isSearching: ${isSearching}`);
   return (
     <div className="SearchBox">
@@ -28,9 +35,10 @@ const SearchBox: React.FC<SearchBoxProps> = ({
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={(e) => handleKeyDown(e.key)}
         placeholder="Search..."
       />
-      <button type="submit" onClick={handleSubmit}>
+      <button type="submit" onClick={handleSubmit} disabled={isSearching}>
         Search
       </button>
     </div>

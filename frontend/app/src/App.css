@@ -47,10 +47,13 @@
 
 .App p.Notification {
   position: absolute;
-  padding: 10px;
-  margin-top: 10px;
-  width: 50%;
-  left: 25%;
+  padding: 20px;
+  margin-top: 30px;
+  /* margin: 20px auto; */
+  max-width: 600px;
+  min-width: 200px;
+  left: 50%;
+  /* left: 25%; */
   /* top: 20px; */
   text-align: center;
   font-weight: bold;
@@ -62,6 +65,7 @@
   box-sizing: border-box;
   overflow-wrap: break-word;
   font-size: 1rem;
+  transform: translate(-50%, -50%);
 }
 
 .App .Placeholder {

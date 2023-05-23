@@ -5,7 +5,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
     "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -31,4 +31,22 @@ pre {
   overflow-wrap: break-word;
   word-wrap: break-word;
   white-space: pre-wrap;
+}
+
+a {
+  color: #007aff;
+  text-decoration: none;
+  transition: color 0.3s ease-in-out;
+}
+
+a:hover {
+  color: #34c9eb;
+}
+
+a:active {
+  color: #34c9eb;
+}
+
+a:focus {
+  outline: none;
 }

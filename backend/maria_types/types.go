@@ -6,6 +6,7 @@ type Document struct {
 	Content string `json:"content"`
 	URL     string `json:"url"`
 	Date    string `json:"date"`
+	Summary string `json:"summary"`
 }
 
 type SearchResult struct {

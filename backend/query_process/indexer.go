@@ -28,8 +28,12 @@ func BuildIndex(documents []Document) {
 	totalDocs := float64(len(documents))
 	docIndex := make(map[string][]Document)
 
-	// First, build the index
+	// First, build the index, and doc's summary at the same time
 	for _, doc := range documents {
+		// Build the summary
+		doc.Summary = calculateSummary(doc.Content)
+
+		// Build the index
 		words := WordSplit(doc.Content)
 		for _, word := range words {
 			docIndex[word] = append(docIndex[word], doc)
@@ -91,7 +95,7 @@ func buildDocumentVector(doc Document) DocumentVector {
 	return DocumentVector{Doc: doc, Vector: vector}
 }
 
-func SearchIndex(queryWords []string) ([]SearchResult, error) {
+func SearchIndex(queryWords []string, page, resultsPerPage int) ([]SearchResult, error) {
 	if len(queryWords) == 0 {
 		return nil, errors.New("empty query")
 	}
@@ -162,6 +166,18 @@ func SearchIndex(queryWords []string) ([]SearchResult, error) {
 		return results[i].Score > results[j].Score
 	})
 
+	// Apply pagination
+	start := (page - 1) * resultsPerPage
+	end := start + resultsPerPage
+	if start > len(results) {
+		start = len(results)
+	}
+	if end > len(results) {
+		end = len(results)
+	}
+
+	results = results[start:end]
+
 	return results, nil
 }
 
@@ -217,4 +233,11 @@ func cosineSimilarity(vector1, vector2 map[string]float64) float64 {
 	sqrtEpsMag1 := math.Sqrt(magnitude1 + epsilon)
 	sqrtEpsMag2 := math.Sqrt(magnitude2 + epsilon)
 	return dotProduct / (sqrtEpsMag1 * sqrtEpsMag2)
+}
+
+func calculateSummary(content string) string {
+	if len(content) > 100 {
+		return content[:100] + "..."
+	}
+	return content
 }

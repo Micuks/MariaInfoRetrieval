@@ -18,7 +18,7 @@ func WordSplit(query string) []string {
 	}()
 
 	words := seg.Cut(query, true) // Use Jeba for Chinese text segment
-	
+
 	words = whitespaceFilter(words)
 	for i := range words {
 		words[i] = strings.TrimSpace(words[i])

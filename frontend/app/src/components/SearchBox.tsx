@@ -3,7 +3,7 @@ import { useState } from "react";
 import React from "react";
 
 interface SearchBoxProps {
-  onSearch: (query: string) => void;
+  onSearch: (query: string, page: number) => void;
   isSearching: boolean;
   setIsSearching: (isSearching: boolean) => void;
 }
@@ -18,7 +18,7 @@ const SearchBox: React.FC<SearchBoxProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSearching(true);
-    onSearch(query);
+    onSearch(query, 1); // 1 as the initial page number
   };
 
   console.debug(`isSearching: ${isSearching}`);

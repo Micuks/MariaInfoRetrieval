@@ -4,6 +4,7 @@ import (
 	"MariaInfoRetrieval/data_process"
 	"MariaInfoRetrieval/query_process"
 	"os"
+	"strconv"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -34,12 +35,23 @@ func main() {
 	r.GET("/search", func(c *gin.Context) {
 		q := c.Query("q")
 
+		page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+		if err != nil {
+			c.JSON(400, gin.H{"error": "Invalid page number"})
+			return
+		}
+
+		resultsPerPage, err := strconv.Atoi(c.DefaultQuery("results_per_page", "10"))
+		if err != nil {
+			c.JSON(400, gin.H{"error": "Invalid number of results per page"})
+		}
+
 		// Process the query
 		queryWords := query_process.WordSplit(q)
 		log.Debug("queryWords:", queryWords)
 
 		// Search the index and calculate scores
-		results, err := query_process.SearchIndex(queryWords)
+		results, err := query_process.SearchIndex(queryWords, page, resultsPerPage)
 		if err != nil {
 			c.JSON(500, gin.H{"error": "Error fetching documents"})
 			return

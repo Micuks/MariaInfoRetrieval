@@ -1,20 +1,27 @@
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import SearchBox from "./components/SearchBox";
 import SearchResults from "./components/SearchResults";
 import { SearchResult } from "./utils/types";
+import Pagination from "./components/Pagination";
 import logo from "./logo.svg";
 import "./App.css";
 
 const App: React.FC = () => {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [resultsPerPage, setResultsPerPage] = useState(10);
+  const [query, setQuery] = useState<string>("");
 
   const backend_url = "http://47.92.133.82:9011";
 
-  const handleSearch = (query: string) => {
+  const handleSearch = (searchQuery: string, page: number) => {
+    setQuery(searchQuery);
     setIsSearching(true);
 
-    fetch(`${backend_url}/search?q=${query}`)
+    fetch(
+      `${backend_url}/search?q=${query}&page=${page}&limit=${resultsPerPage}`
+    )
       .then((response) => response.json())
       .then((data) => {
         console.debug(data);
@@ -30,6 +37,11 @@ const App: React.FC = () => {
         console.error("Error:", error);
         setIsSearching(false);
       });
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    handleSearch(query, page);
   };
 
   console.debug(`isSearching: ${isSearching}`);
@@ -56,6 +68,8 @@ const App: React.FC = () => {
       {/* Placeholder */}
       {isSearching && <div className="Placeholder"></div>}
       <SearchResults results={results} />
+      {/* Add Pagination component here*/}
+      <Pagination currentPage={currentPage} onPageChange={handlePageChange} />
     </div>
   );
 };

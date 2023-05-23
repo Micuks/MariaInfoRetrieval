@@ -3,6 +3,7 @@ package main
 import (
 	"MariaInfoRetrieval/data_process"
 	"MariaInfoRetrieval/query_process"
+	"fmt"
 	"os"
 	"strconv"
 
@@ -32,9 +33,20 @@ func main() {
 	}
 	query_process.BuildIndex(docs)
 
+	// Global search result cache
+	cache := query_process.NewCache()
+
 	r.GET("/search", func(c *gin.Context) {
 		q := c.Query("q")
+		cacheKey := fmt.Sprintf("%s-%s-%s", q, c.Query("page"), c.Query("results_per_page"))
 
+		// Return if hit cache
+		if cachedResults, found := cache.Get(cacheKey); found {
+			c.JSON(200, cachedResults)
+			return
+		}
+
+		// Else search
 		page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
 		if err != nil {
 			c.JSON(400, gin.H{"error": "Invalid page number"})
@@ -56,6 +68,9 @@ func main() {
 			c.JSON(500, gin.H{"error": "Error fetching documents"})
 			return
 		}
+
+		// Store search results in cache
+		cache.Set(cacheKey, results)
 
 		log.Debug(results)
 		c.JSON(200, results)

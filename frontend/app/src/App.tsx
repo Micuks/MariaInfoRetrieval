@@ -1,10 +1,11 @@
-import React, { Suspense, useState } from "react";
+import React, { useState } from "react";
 import SearchBox from "./components/SearchBox";
 import SearchResults from "./components/SearchResults";
 import { SearchResult } from "./utils/types";
 import Pagination from "./components/Pagination";
 import logo from "./logo.svg";
 import "./App.css";
+import { backend_url } from "./utils/config";
 
 const App: React.FC = () => {
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -12,8 +13,6 @@ const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [resultsPerPage, setResultsPerPage] = useState(10);
   const [query, setQuery] = useState<string>("");
-
-  const backend_url = "http://47.92.133.82:9011";
 
   const handleSearch = (searchQuery: string, page: number) => {
     setQuery(searchQuery);

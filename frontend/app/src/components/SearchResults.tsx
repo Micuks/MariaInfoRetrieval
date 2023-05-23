@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { SearchResult } from "../utils/types";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { atomDark as codeTheme } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { backend_url } from "../utils/config";
 
 interface SearchResultProps {
   result: SearchResult;
@@ -11,12 +12,27 @@ interface SearchResultProps {
 
 const SearchResultItem: React.FC<SearchResultProps> = ({ result }) => {
   const [content, setContent] = useState("");
+  const [contentFetched, setContentFetched] = useState<boolean>(false);
   const [isFolded, setIsFolded] = useState(true); // new state
-  const toggleFold = () => setIsFolded(!isFolded); // function to toggle the fold
+  const toggleFold = () => {
+    setIsFolded(!isFolded);
+  }; // function to toggle the fold
 
   useEffect(() => {
+    if (!isFolded && !contentFetched) {
+      fetch(`${backend_url}/document?id=${result.id}`)
+        .then((response) => response.json())
+        .then((data) => {
+          let doc = renderCodeBlocks(data.content);
+          setContent(doc.body.innerHTML);
+          setContentFetched(true);
+        });
+    }
+  }, [isFolded, content, contentFetched, result]);
+
+  const renderCodeBlocks = (content: string) => {
     let parser = new DOMParser();
-    let doc = parser.parseFromString(result.content, "text/html");
+    let doc = parser.parseFromString(content, "text/html");
     let codeBlocks = doc.querySelectorAll("pre");
 
     codeBlocks.forEach((block) => {
@@ -29,8 +45,8 @@ const SearchResultItem: React.FC<SearchResultProps> = ({ result }) => {
       block.innerHTML = highlightedCodeString;
     });
 
-    setContent(doc.body.innerHTML);
-  }, [result]);
+    return doc;
+  };
 
   return (
     <div>

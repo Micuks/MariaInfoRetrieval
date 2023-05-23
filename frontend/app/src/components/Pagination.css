@@ -1,0 +1,14 @@
+.Pagination button {
+  width: auto;
+  border: none;
+  background-color: #007aff;
+  color: #fff;
+  border-radius: 10px;
+  padding: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.Pagination button:hover {
+  background-color: #0051d6;
+}

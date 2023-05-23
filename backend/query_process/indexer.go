@@ -31,9 +31,6 @@ func BuildIndex(documents []Document) {
 
 	// First, build the index, and doc's summary at the same time
 	for _, doc := range documents {
-		// Build the summary
-		doc.Summary = calculateSummary(doc.Content)
-
 		// Build the idDocMap
 		idDocMap[doc.Id] = doc
 
@@ -99,6 +96,17 @@ func buildDocumentVector(doc Document) DocumentVector {
 	return DocumentVector{Doc: doc, Vector: vector}
 }
 
+func buildSummaryDocument(doc Document) SummaryDocument {
+	summaryDoc := SummaryDocument{
+		Id:      doc.Id,
+		Title:   doc.Title,
+		URL:     doc.URL,
+		Date:    doc.Date,
+		Content: calculateSummary(doc.Content),
+	}
+	return summaryDoc
+}
+
 func SearchIndex(queryWords []string, page, resultsPerPage int) ([]SearchResult, error) {
 	if len(queryWords) == 0 {
 		return nil, errors.New("empty query")
@@ -116,7 +124,7 @@ func SearchIndex(queryWords []string, page, resultsPerPage int) ([]SearchResult,
 		log.Debug("Query made up of words in every or no documents. Returning all documents.")
 		results := make([]SearchResult, 0, len(docs))
 		for _, doc := range docs {
-			results = append(results, SearchResult{Doc: doc, Score: 1.0})
+			results = append(results, SearchResult{Doc: buildSummaryDocument(doc), Score: 1.0})
 		}
 
 		return results, nil
@@ -148,10 +156,8 @@ func SearchIndex(queryWords []string, page, resultsPerPage int) ([]SearchResult,
 				} else {
 					// If the document is not in the scoreMap, add it with
 					// ContentFetched set to false
-					doc := vector.Doc
-					doc.Content = doc.Summary
-					doc.ContentFetched = false
-					scoreMap[vector.Doc.Id] = &SearchResult{Doc: vector.Doc, Score: score}
+					summaryDoc := buildSummaryDocument(vector.Doc)
+					scoreMap[vector.Doc.Id] = &SearchResult{Doc: summaryDoc, Score: score}
 				}
 			}
 		}

@@ -7,9 +7,13 @@ import "./App.css";
 
 const App: React.FC = () => {
   const [results, setResults] = useState<SearchResult[]>([]);
-  const backend_url = "http://10.128.170.37:9011";
+  const [isSearching, setIsSearching] = useState(false);
+
+  const backend_url = "http://47.92.133.82:9011";
 
   const handleSearch = (query: string) => {
+    setIsSearching(true);
+
     fetch(`${backend_url}/search?q=${query}`)
       .then((response) => response.json())
       .then((data) => {
@@ -20,16 +24,20 @@ const App: React.FC = () => {
             ...item.Doc,
           }))
         );
+        setIsSearching(false);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        setIsSearching(false);
       });
   };
 
+  console.debug(`isSearching: ${isSearching}`);
   return (
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logl" />
         <p>Maria Info Retrieval System</p>
-        <SearchBox onSearch={handleSearch} />
-        <SearchResults results={results} />
         <a
           className="App-link"
           href="https://github.com/Micuks"
@@ -39,6 +47,13 @@ const App: React.FC = () => {
           Micuks
         </a>
       </header>
+      <SearchBox
+        onSearch={handleSearch}
+        isSearching={isSearching}
+        setIsSearching={setIsSearching}
+      />
+      {isSearching && <p className="Notification">Searching...</p>}
+      <SearchResults results={results} />
     </div>
   );
 };

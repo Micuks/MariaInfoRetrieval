@@ -4,16 +4,24 @@ import React from "react";
 
 interface SearchBoxProps {
   onSearch: (query: string) => void;
+  isSearching: boolean;
+  setIsSearching: (isSearching: boolean) => void;
 }
 
-const SearchBox: React.FC<SearchBoxProps> = ({ onSearch }) => {
+const SearchBox: React.FC<SearchBoxProps> = ({
+  onSearch,
+  isSearching,
+  setIsSearching,
+}) => {
   const [query, setQuery] = useState<string>("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSearching(true);
     onSearch(query);
   };
 
+  console.debug(`isSearching: ${isSearching}`);
   return (
     <div className="SearchBox">
       <input

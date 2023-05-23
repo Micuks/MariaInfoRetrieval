@@ -3,6 +3,7 @@
   max-width: 600px;
   display: flex;
   justify-content: space-between;
+  position: relative;
 }
 
 .SearchBox input {

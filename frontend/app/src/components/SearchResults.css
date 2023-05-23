@@ -4,6 +4,8 @@
   max-width: 900px;
   box-sizing: border-box;
   overflow-wrap: break-word;
+  font-size: 16px;
+  color: #333;
 }
 
 .SearchResultItem {
@@ -15,16 +17,24 @@
   overflow: hidden;
   box-sizing: border-box;
   overflow-wrap: break-word;
+  transition: box-shadow 0.3s ease;
+}
+
+.SearchResultItem:hover {
+  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.2);
 }
 
 .SearchResultItem h2 {
   margin-top: 0;
+  color: #007aff;
+  cursor: pointer;
   box-sizing: border-box;
   overflow-wrap: break-word;
 }
 
 .SearchResultItem p {
   white-space: pre-line;
+  color: #666;
   box-sizing: border-box;
   overflow-wrap: break-word;
 }

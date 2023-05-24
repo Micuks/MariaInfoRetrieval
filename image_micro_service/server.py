@@ -32,9 +32,13 @@ def image_to_keywords():
     log.info(file.filename)
 
     try:
-        img = Image.open(io.BytesIO(file.read())).resize((224, 224))
+        img = (
+            Image.open(io.BytesIO(file.read()))
+            .convert("RGB")
+            .resize((224, 224))
+        )
     except Exception as e:
-        msg = "Failed to open image: " + str(e)
+        msg = "Failed to load image: " + str(e)
         log.error(msg)
         return msg, 500
 

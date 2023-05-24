@@ -42,7 +42,9 @@ func LoadDocuments(dir string) ([]Document, error) {
 	}
 
 	// Convert document from escaped Unicode format to Unicode format
-	for _, doc := range documents {
+	for id, doc := range documents {
+		// Reindex documents to avoid duplicate id
+		doc.Id = strconv.Itoa(id)
 		// Convert title
 		sTitle := strconv.QuoteToASCII(doc.Title)
 		doc.Title = sTitle[1 : len(sTitle)-1]

@@ -5,6 +5,7 @@ import (
 	. "MariaInfoRetrieval/maria_types"
 	"MariaInfoRetrieval/query_process"
 	"os"
+	"strconv"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -25,6 +26,8 @@ func main() {
 	r := gin.Default()
 	r.Use(cors.Default())
 
+	defaultResultsPerPage := 10
+
 	// Load and index documents
 	docs, err := data_process.LoadDocuments("./data")
 	if err != nil {
@@ -34,7 +37,7 @@ func main() {
 	query_process.BuildIndex(docs)
 
 	r.GET("/search", func(c *gin.Context) {
-		result, err := query_process.PerformSearch(c.Query("q"), c.Query("page"), c.Query("limit"))
+		result, err := query_process.PerformSearch(c.Query("q"), c.Query("page"), c.DefaultQuery("limit", strconv.Itoa(defaultResultsPerPage)))
 		if err != nil {
 			c.JSON(result.Code, err.Error())
 			return
@@ -60,7 +63,7 @@ func main() {
 	r.POST("/search_by_image", func(c *gin.Context) {
 		file, _ := c.FormFile("image")
 		// Save file to the server
-		dst := "/tmp/" + file.Filename
+		dst := "/tmp/MariaInfoRetrieval/" + file.Filename
 		c.SaveUploadedFile(file, dst)
 
 		// Call a function to send this image to the python service, and get
@@ -72,12 +75,12 @@ func main() {
 		}
 
 		// Then use these keywords to perform a search
-		result, err := query_process.PerformSearch(keywords, c.Query("page"), c.Query("limit"))
+		result, err := query_process.PerformSearch(keywords, strconv.Itoa(1), strconv.Itoa(defaultResultsPerPage))
 		if err != nil {
 			c.JSON(result.Code, err.Error())
 			return
 		}
-		c.JSON(200, result.Results)
+		c.JSON(200, gin.H{"results": result.Results, "keywords": keywords})
 	})
 
 	// Handle feedback

@@ -16,7 +16,6 @@ const App: React.FC = () => {
 
   const handleSearch = (searchQuery: string, page: number) => {
     setIsSearching(true);
-
     fetch(
       `${backend_url}/search?q=${searchQuery}&page=${page}&limit=${resultsPerPage}`
     )
@@ -36,6 +35,37 @@ const App: React.FC = () => {
         console.error("Error:", error);
         setIsSearching(false);
       });
+  };
+
+  const handleImageSearch = (image: File | null) => {
+    setIsSearching(true);
+
+    if (image) {
+      const formData = new FormData();
+      formData.append("image", image);
+
+      fetch(`${backend_url}/search_by_image`, {
+        method: "POST",
+        body: formData,
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          setResults(
+            data.results.map((item: any) => ({
+              score: item.Score,
+              ...item.Doc,
+            }))
+          );
+          setIsSearching(false);
+          // Fill back keyword
+          setQuery(data.keywords);
+          setCurrentPage(1);
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          setIsSearching(false);
+        });
+    }
   };
 
   const handlePageChange = (page: number) => {
@@ -59,8 +89,11 @@ const App: React.FC = () => {
       </header>
       <SearchBox
         onSearch={handleSearch}
+        onImageSearch={handleImageSearch}
         isSearching={isSearching}
         setIsSearching={setIsSearching}
+        query={query}
+        setQuery={setQuery}
       />
       {isSearching && <p className="Notification">Searching...</p>}
       {/* Placeholder */}

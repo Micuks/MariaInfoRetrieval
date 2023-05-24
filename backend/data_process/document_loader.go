@@ -37,6 +37,8 @@ func LoadDocuments(dir string) ([]Document, error) {
 		}
 
 		documents = append(documents, docs...)
+
+		f.Close()
 	}
 
 	// Convert document from escaped Unicode format to Unicode format

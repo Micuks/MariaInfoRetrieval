@@ -36,7 +36,7 @@ func BuildIndex(documents []Document) {
 		idDocMap[doc.Id] = doc
 
 		// Build the index
-		words := WordSplit(doc.Content)
+		words := WordSplit(doc.Keywords)
 		for _, word := range words {
 			docIndex[word] = append(docIndex[word], doc)
 		}
@@ -53,18 +53,26 @@ func BuildIndex(documents []Document) {
 	// Third, build index of []DocumentVector
 	for _, doc := range documents {
 		docVector := buildDocumentVector(doc)
-		words := WordSplit(doc.Content)
+		words := WordSplit(doc.Keywords)
 
 		for _, word := range words {
 			index[word] = append(index[word], docVector)
 		}
 	}
 
+	// Debug
+	// for word, docs := range index {
+	// 	log.Debug(word)
+	// 	for _, doc := range docs {
+	// 		log.Debug(word, doc)
+	// 	}
+	// }
+
 }
 
 func buildDocumentVector(doc Document) DocumentVector {
 	vector := make(map[string]float64)
-	words := WordSplit(doc.Content)
+	words := WordSplit(doc.Keywords)
 	wordCount := float64(len(words))
 
 	// Calculate TF for each term in the document
@@ -100,7 +108,7 @@ func buildSummaryDocument(doc Document) SummaryDocument {
 		Title:   doc.Title,
 		URL:     doc.URL,
 		Date:    doc.Date,
-		Content: calculateSummary(doc.Content),
+		Content: calculateSummary(doc.Keywords),
 	}
 	return summaryDoc
 }
@@ -151,7 +159,7 @@ func SearchIndex(queryWords []string, page, resultsPerPage int) ([]SearchResult,
 			for _, vector := range vectors {
 
 				wg.Add(1)
-				go func(v DocumentVector, scoresChan chan float64) {
+				go func(w string, v DocumentVector, scoresChan chan float64) {
 					defer wg.Done()
 
 					// Calculate score
@@ -161,15 +169,15 @@ func SearchIndex(queryWords []string, page, resultsPerPage int) ([]SearchResult,
 					// -  frequency of query words
 					// - document length
 					// - position of first query word
-					frequency := float64(len(WordSplit(v.Doc.Content)))
-					position := float64(strings.Index(v.Doc.Content, word))
-					length := float64(len(v.Doc.Content))
+					frequency := float64(len(WordSplit(v.Doc.Keywords)))
+					position := float64(strings.Index(v.Doc.Keywords, w))
+					length := float64(len(v.Doc.Keywords))
 
 					adjustment := (1 + math.Log(frequency+1)) * (1 / (1 + math.Log(length+1)) * (1 / (1 + math.Log(position+1))))
 					score *= adjustment
 
 					scoresChan <- score
-				}(vector, scoresChansMap[vector.Doc.Id])
+				}(word, vector, scoresChansMap[vector.Doc.Id])
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import SearchBox from "./components/SearchBox";
 import SearchResults from "./components/SearchResults";
 import { SearchResult } from "./utils/types";
@@ -31,6 +31,7 @@ const App: React.FC = () => {
           }))
         );
         setIsSearching(false);
+        setCurrentPage(page);
       })
       .catch((error) => {
         console.error("Error:", error);

@@ -1,11 +1,12 @@
 package maria_types
 
 type Document struct {
-	Id      string `json:"id"`
-	Title   string `json:"title"`
-	Content string `json:"content"`
-	URL     string `json:"url"`
-	Date    string `json:"date"`
+	Id       string `json:"id"`
+	Title    string `json:"title"`
+	Content  string `json:"content"`
+	Keywords string `json:"keywords"`
+	URL      string `json:"url"`
+	Date     string `json:"date"`
 }
 
 type SummaryDocument struct {

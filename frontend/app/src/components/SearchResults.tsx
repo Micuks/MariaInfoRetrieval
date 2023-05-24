@@ -91,7 +91,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results }) => {
   return (
     <div>
       {results.map((result, index) => (
-        <SearchResultItem key={index} result={result} />
+        <SearchResultItem key={`${result.id}-${index}`} result={result} />
       ))}
     </div>
   );

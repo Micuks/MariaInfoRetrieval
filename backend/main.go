@@ -2,6 +2,7 @@ package main
 
 import (
 	"MariaInfoRetrieval/data_process"
+	. "MariaInfoRetrieval/maria_types"
 	"MariaInfoRetrieval/query_process"
 	"fmt"
 	"os"
@@ -61,7 +62,7 @@ func main() {
 
 		// Process the query
 		queryWords := query_process.WordSplit(q)
-		log.Debug("queryWords:", queryWords)
+		log.Info("queryWords:", queryWords)
 
 		// Search the index and calculate scores
 		results, err := query_process.SearchIndex(queryWords, page, resultsPerPage)
@@ -73,7 +74,6 @@ func main() {
 		// Store search results in cache
 		cache.Set(cacheKey, results)
 
-		log.Debug(results)
 		c.JSON(200, results)
 	})
 
@@ -87,6 +87,20 @@ func main() {
 		}
 
 		c.JSON(200, doc)
+	})
+
+	// Handle feedback
+	r.POST("/feedback", func(c *gin.Context) {
+		var feedback Feedback
+		if err := c.BindJSON(&feedback); err != nil {
+			c.JSON(400, gin.H{"error": "Failed to parse request body"})
+			return
+		}
+
+		// Process the feedback here...
+		log.Infof("Received feedback: %v", feedback)
+
+		c.JSON(200, gin.H{"message": "Feedback received successfully"})
 	})
 
 	r.Run(":9011")

@@ -42,3 +42,21 @@
 .SearchResultItem-unfold {
   cursor: pointer;
 }
+
+button.feedback {
+  width: auto;
+  border: none;
+  background-color: #007aff;
+  color: #fff;
+  border-radius: 8px;
+  padding: 5px;
+  padding-left: 10px;
+  padding-right: 10px;
+  margin: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+button.feedback:hover {
+  background-color: #0051d6;
+}

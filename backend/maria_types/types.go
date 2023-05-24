@@ -20,3 +20,9 @@ type SearchResult struct {
 	Score float64
 	Doc   SummaryDocument
 }
+
+// Struct of feedback
+type Feedback struct {
+	ResultId string `json:"resultId"`
+	Score    int    `json:"Score"`
+}

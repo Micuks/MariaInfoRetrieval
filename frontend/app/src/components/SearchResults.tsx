@@ -48,6 +48,19 @@ const SearchResultItem: React.FC<SearchResultProps> = ({ result }) => {
     return doc;
   };
 
+  const handleFeedback = (resultId: string, score: number) => {
+    fetch(`${backend_url}/feedback`, {
+      method: "POST",
+      headers: {
+        "Content-TYpe": "application/json",
+      },
+      body: JSON.stringify({ resultId, score }),
+    })
+      .then((response) => response.json())
+      .then((data) => console.log(data))
+      .catch((error) => console.error("Error: ", error));
+  };
+
   return (
     <div>
       <h2 onClick={toggleFold}>
@@ -57,6 +70,12 @@ const SearchResultItem: React.FC<SearchResultProps> = ({ result }) => {
       <p>{result.url}</p>
       <p>{result.date}</p>
       <p>Relevance: {result.score}</p>
+      <button className="feedback" onClick={() => handleFeedback(result.id, 1)}>
+        👍
+      </button>
+      <button className="feedback" onClick={() => handleFeedback(result.id, 0)}>
+        👎
+      </button>
     </div>
   );
 };

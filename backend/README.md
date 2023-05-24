@@ -10,6 +10,7 @@
         - [TF](#tf)
         - [IDF](#idf)
     - [Results sorting](#results-sorting)
+    - [Parallel computing](#parallel-computing)
 
 > Information retrieval system in Go
 
@@ -125,3 +126,18 @@ It adjusts the score of each document based on several factors:
 - The length of the document. The longer the document, the lower the score. This helps to prevent very long documents from getting artificially high scores simply because they have more words.
 - The position of the first query word in the document. The sooner a query word appears in the document, the higher the score.
 - These adjustments are added to the cosine similarity score to produce the final score for each document.
+
+### Parallel computing
+
+When processing query, it is time-consuming for computing a TF-IDF score for
+each Query word vector. So I parallel compute the match scores for all
+documents.
+
+Create a channel once for each document ID, with a size based on the total
+number of instances that document ID appears in the vectors of all query words.
+
+The first loop counts the total number of vectors for each document ID across
+all query words, and then the channels are created based on these counts. This
+ensures that each channel is large enough to accommodate all the scores
+corresponding to a specific document ID, and none of the channels will be
+replaced and prematurely closed.

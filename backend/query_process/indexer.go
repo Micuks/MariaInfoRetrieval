@@ -6,6 +6,7 @@ import (
 	"math"
 	"sort"
 	"strings"
+	"sync"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -127,36 +128,69 @@ func SearchIndex(queryWords []string, page, resultsPerPage int) ([]SearchResult,
 		return results, nil
 	}
 
-	// Use a map to eliminate duplicates and update scores
-	scoreMap := make(map[string]*SearchResult)
-
-	// Rank the documents based on all query words.
+	vectorCounts := make(map[string]int)
+	// Count the total number of vectors for each document ID across all query words
 	for _, word := range queryWords {
-		// Check if the word is in the index
 		if vectors, ok := index[word]; ok {
 			for _, vector := range vectors {
-				score := cosineSimilarity(queryVector, vector.Vector)
-
-				// Adjust the score based on frequency of query words, document
-				// length, and position of first query word
-				frequency := float64(len(WordSplit(vector.Doc.Content)))
-				position := float64(strings.Index(vector.Doc.Content, word))
-				length := float64(len(vector.Doc.Content))
-
-				adjustment := (1 + math.Log(frequency+1)) * (1 / (1 + math.Log(length+1)) * (1 / (1 + math.Log(position+1))))
-				score *= adjustment
-
-				if result, ok := scoreMap[vector.Doc.Id]; ok {
-					// If the document is already in the scoreMap, update its score
-					result.Score += score
-				} else {
-					// If the document is not in the scoreMap, add it with
-					// ContentFetched set to false
-					summaryDoc := buildSummaryDocument(vector.Doc)
-					scoreMap[vector.Doc.Id] = &SearchResult{Doc: summaryDoc, Score: score}
-				}
+				vectorCounts[vector.Doc.Id]++
 			}
 		}
+	}
+
+	// Parallel result computation
+	scoresChansMap := make(map[string]chan float64)
+	for id, count := range vectorCounts {
+		scoresChansMap[id] = make(chan float64, count)
+	}
+
+	var wg sync.WaitGroup
+
+	for _, word := range queryWords {
+		if vectors, ok := index[word]; ok {
+			for _, vector := range vectors {
+
+				wg.Add(1)
+				go func(v DocumentVector, scoresChan chan float64) {
+					defer wg.Done()
+
+					// Calculate score
+					score := cosineSimilarity(queryVector, v.Vector)
+
+					// Adjust the score based on:
+					// -  frequency of query words
+					// - document length
+					// - position of first query word
+					frequency := float64(len(WordSplit(v.Doc.Content)))
+					position := float64(strings.Index(v.Doc.Content, word))
+					length := float64(len(v.Doc.Content))
+
+					adjustment := (1 + math.Log(frequency+1)) * (1 / (1 + math.Log(length+1)) * (1 / (1 + math.Log(position+1))))
+					score *= adjustment
+
+					scoresChan <- score
+				}(vector, scoresChansMap[vector.Doc.Id])
+			}
+		}
+	}
+
+	// Wait for all goroutines to finish, then close the results channel
+	go func() {
+		wg.Wait()
+		for _, scoresChan := range scoresChansMap {
+			close(scoresChan)
+		}
+	}()
+
+	// Collect the results
+	scoreMap := make(map[string]*SearchResult)
+	for id, scoresChan := range scoresChansMap {
+		totalScore := 0.0
+		for score := range scoresChan {
+			totalScore += score
+		}
+		summaryDoc := buildSummaryDocument(idDocMap[id])
+		scoreMap[id] = &SearchResult{Doc: summaryDoc, Score: totalScore}
 	}
 
 	log.Info(">>> scoreMap")

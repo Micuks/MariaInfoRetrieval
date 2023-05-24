@@ -21,19 +21,25 @@ const SearchBox: React.FC<SearchBoxProps> = ({
 }) => {
   const [file, setFile] = useState<File | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleTextSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSearching(true);
+    onSearch(query, 1); // 1 as the initial page number
+  };
+
+  const handleImageSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSearching(true);
     if (file) {
       onImageSearch(file);
     } else {
-      onSearch(query, 1); // 1 as the initial page number
+      console.error("Error searching by image: file not given.");
     }
   };
 
   return (
     <div className="SearchBox">
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleTextSearchSubmit}>
         {/* Search by text */}
         <input
           type="text"
@@ -41,6 +47,12 @@ const SearchBox: React.FC<SearchBoxProps> = ({
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search..."
         />
+        <button type="submit" disabled={isSearching}>
+          Search
+        </button>
+      </form>
+
+      <form onSubmit={handleImageSearchSubmit}>
         {/* Search by image */}
         <input
           type="file"
@@ -49,7 +61,7 @@ const SearchBox: React.FC<SearchBoxProps> = ({
           id="fileUpload"
         />
         <button type="submit" disabled={isSearching}>
-          Search
+          Search<br></br>by Image
         </button>
       </form>
     </div>

@@ -23,6 +23,11 @@ button.Pagination-button:disabled {
   cursor: not-allowed;
 }
 
+button.Pagination-button:disabled:hover {
+  background-color: #565656;
+  cursor: not-allowed;
+}
+
 button.Pagination-button:hover {
   background-color: #0051d6;
   /* background-color: #45a049; */

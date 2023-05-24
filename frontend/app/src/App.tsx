@@ -69,6 +69,10 @@ const App: React.FC = () => {
   };
 
   const handlePageChange = (page: number) => {
+    if (page <= 0) {
+      setCurrentPage(1);
+    }
+
     setCurrentPage(page);
     handleSearch(query, page);
   };

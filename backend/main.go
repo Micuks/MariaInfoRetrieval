@@ -4,9 +4,7 @@ import (
 	"MariaInfoRetrieval/data_process"
 	. "MariaInfoRetrieval/maria_types"
 	"MariaInfoRetrieval/query_process"
-	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -31,50 +29,18 @@ func main() {
 	docs, err := data_process.LoadDocuments("./data")
 	if err != nil {
 		log.Error("Failed to load documents: %v", err)
+		return
 	}
 	query_process.BuildIndex(docs)
 
-	// Global search result cache
-	cache_capacity := 10
-	cache := query_process.NewCache(cache_capacity)
-
 	r.GET("/search", func(c *gin.Context) {
-		q := c.Query("q")
-		cacheKey := fmt.Sprintf("%s-%s-%s", q, c.Query("page"), c.Query("results_per_page"))
-
-		// Return if hit cache
-		if cachedResults, found := cache.Get(cacheKey); found {
-			c.JSON(200, cachedResults)
+		result, err := query_process.PerformSearch(c.Query("q"), c.Query("page"), c.Query("limit"))
+		if err != nil {
+			c.JSON(result.Code, err.Error())
 			return
 		}
 
-		// Else search
-		page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
-		if err != nil {
-			c.JSON(400, gin.H{"error": "Invalid page number"})
-			return
-		}
-
-		resultsPerPage, err := strconv.Atoi(c.DefaultQuery("results_per_page", "10"))
-		if err != nil {
-			c.JSON(400, gin.H{"error": "Invalid number of results per page"})
-		}
-
-		// Process the query
-		queryWords := query_process.WordSplit(q)
-		log.Info("queryWords:", queryWords)
-
-		// Search the index and calculate scores
-		results, err := query_process.SearchIndex(queryWords, page, resultsPerPage)
-		if err != nil {
-			c.JSON(500, gin.H{"error": "Error fetching documents"})
-			return
-		}
-
-		// Store search results in cache
-		cache.Set(cacheKey, results)
-
-		c.JSON(200, results)
+		c.JSON(200, result.Results)
 	})
 
 	// Fetch SearchResult content details
@@ -84,9 +50,34 @@ func main() {
 		doc, found := query_process.GetFullDoc(id)
 		if !found {
 			c.JSON(404, gin.H{"error": "Document" + id + " not found"})
+			return
 		}
 
 		c.JSON(200, doc)
+	})
+
+	// Search by image
+	r.POST("/search_by_image", func(c *gin.Context) {
+		file, _ := c.FormFile("image")
+		// Save file to the server
+		dst := "/tmp/" + file.Filename
+		c.SaveUploadedFile(file, dst)
+
+		// Call a function to send this image to the python service, and get
+		// back the keywords
+		keywords, err := query_process.GetKeywordsFromImage(dst)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Then use these keywords to perform a search
+		result, err := query_process.PerformSearch(keywords, c.Query("page"), c.Query("limit"))
+		if err != nil {
+			c.JSON(result.Code, err.Error())
+			return
+		}
+		c.JSON(200, result.Results)
 	})
 
 	// Handle feedback

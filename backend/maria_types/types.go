@@ -27,3 +27,9 @@ type Feedback struct {
 	ResultId string `json:"resultId"`
 	Score    int    `json:"Score"`
 }
+
+// Struct of PerformSearch's response
+type Response struct {
+	Code    int            `json:"code"`
+	Results []SearchResult `json:"results"`
+}

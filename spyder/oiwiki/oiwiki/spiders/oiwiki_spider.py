@@ -34,8 +34,6 @@ class OiwikiSpiderSpider(scrapy.Spider):
             yield scrapy.Request(url=url, callback=self.parse, cb_kwargs={})
 
     def parse(self, response):
-        # If there's two-level selector, yield scrapy.Request separately to its
-        # leaf nodes
         sections = response.xpath(
             "//li[@class='md-nav__item']/a[@class='md-nav__link']"
         )
@@ -45,7 +43,7 @@ class OiwikiSpiderSpider(scrapy.Spider):
         # Number of hrefs should be equal to number of texts
         assert len(hrefs) == len(texts)
 
-        # Yield scrapy request to all sections
+        # Yield scrapy request for each sections
         for href, section in zip(hrefs, texts):
             url = response.urljoin(href)
             yield scrapy.Request(
@@ -55,7 +53,7 @@ class OiwikiSpiderSpider(scrapy.Spider):
             )
 
     def parse_section(self, response, section="Unknown"):
-        # Scrapy section details
+        # Scrawl section content
         content = response.xpath(
             '//div[@class="md-content"]//blockquote[1]/preceding-sibling::*[not(self::a)]'
         ).getall()

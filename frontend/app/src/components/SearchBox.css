@@ -6,6 +6,12 @@
   position: relative;
 }
 
+.SearchBox form {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
 .SearchBox input {
   padding: 10px;
   width: 85%;
@@ -21,6 +27,7 @@
 .SearchBox button {
   width: auto;
   border: none;
+  margin-left: 6px;
   background-color: #007aff;
   color: #fff;
   border-radius: 20px;

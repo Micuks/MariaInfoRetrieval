@@ -11,6 +11,9 @@
         - [IDF](#idf)
     - [Results sorting](#results-sorting)
     - [Parallel computing](#parallel-computing)
+  - [Search by image](#search-by-image)
+    - [Python microservice implementation](#python-microservice-implementation)
+      - [Limitations](#limitations)
 
 > Information retrieval system in Go
 
@@ -141,3 +144,17 @@ all query words, and then the channels are created based on these counts. This
 ensures that each channel is large enough to accommodate all the scores
 corresponding to a specific document ID, and none of the channels will be
 replaced and prematurely closed.
+
+## Search by image
+
+For simplicity and ease of use, I choose HTTP as the communication protocol. We will be using Flask as our web framework to create the Python microservice.
+
+The Python service will take in an image file, perform feature extraction with a pre-trained CNN like ResNet50 (using Keras), and then perform reverse image tagging to generate keywords.
+
+### Python microservice implementation
+
+This script opens a Flask server on port 5000 and waits for POST requests on the /image_to_keywords endpoint. It expects an image file as input, which it resizes to 224x224 (the input size for ResNet50), preprocesses, and feeds to the model. The model's output is a list of class probabilities, which decode_predictions translates into class names (object labels). The script returns the top prediction as a JSON object.
+
+#### Limitations
+
+Please note that this example implementation is quite simplified and may not be suitable for production use. For instance, it assumes that the images can be classified into one of the 1000 classes recognized by the ImageNet dataset, which might not be the case for your application. Customizing the keyword generation part may require additional work, like fine-tuning the model on your specific data or implementing a custom reverse image tagging algorithm.

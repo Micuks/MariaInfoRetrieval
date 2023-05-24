@@ -15,15 +15,13 @@ const App: React.FC = () => {
   const [query, setQuery] = useState<string>("");
 
   const handleSearch = (searchQuery: string, page: number) => {
-    setQuery(searchQuery);
     setIsSearching(true);
 
     fetch(
-      `${backend_url}/search?q=${query}&page=${page}&limit=${resultsPerPage}`
+      `${backend_url}/search?q=${searchQuery}&page=${page}&limit=${resultsPerPage}`
     )
       .then((response) => response.json())
       .then((data) => {
-        console.debug(data);
         setResults(
           data.map((item: any) => ({
             score: item.Score,
@@ -31,6 +29,7 @@ const App: React.FC = () => {
           }))
         );
         setIsSearching(false);
+        setQuery(searchQuery);
         setCurrentPage(page);
       })
       .catch((error) => {
@@ -44,7 +43,6 @@ const App: React.FC = () => {
     handleSearch(query, page);
   };
 
-  console.debug(`isSearching: ${isSearching}`);
   return (
     <div className="App">
       <header className="App-header">

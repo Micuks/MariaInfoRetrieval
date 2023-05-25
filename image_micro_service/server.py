@@ -1,21 +1,13 @@
 from flask import Flask, request
-from keras.applications.resnet import (
-    ResNet50,
-    preprocess_input,
-    decode_predictions,
-)
-from keras.preprocessing import image
-from keras.utils import img_to_array
-from PIL import Image
-import numpy as np
-import io
 import json
 import logging
+import entity_detection
+import image_detection
 
-app = Flask(__name__)
-model = ResNet50(weights="imagenet")
 
 log = logging.getLogger("image_to_keywords")
+
+app = Flask(__name__)
 
 
 @app.route("/image_to_keywords", methods=["POST"])
@@ -30,45 +22,29 @@ def image_to_keywords():
     if file.filename == "":
         return "No selected file", 400
     log.info(file.filename)
+    result, code = image_detection.image_to_keywords(file)
+    if code != 200:
+        log.error(result)
+        return result, code
+    return result, code
 
-    try:
-        img = (
-            Image.open(io.BytesIO(file.read()))
-            .convert("RGB")
-            .resize((224, 224))
-        )
-    except Exception as e:
-        msg = "Failed to load image: " + str(e)
-        log.error(msg)
-        return msg, 500
 
-    try:
-        x = img_to_array(img)
-    except Exception as e:
-        msg = "Failed to convert image to array: " + str(e)
-        log.error(msg)
-        return msg, 500
+@app.route("/extract_info", methods=["POST"])
+def extract_info():
+    data = request.get_json()
+    text = data.get("text")
+    language = data.get("language")
 
-    try:
-        x = np.expand_dims(x, axis=0)
-        x = preprocess_input(x)
-    except Exception as e:
-        msg = "Failed to preprocess image: " + str(e)
-        log.error(msg)
-        return msg, 500
+    if not text or not language:
+        return "Invalid request: no text or no language", 400
 
-    try:
-        preds = model.predict(x)
-        predictions = decode_predictions(preds, top=5)[0]
-        # Just return the top prediction
-        keyword = predictions[0][1]
-        log.info(keyword)
+    if language not in ["en", "cn"]:
+        return "Unsupported language: " + language, 400
 
-        return json.dumps({"keyword": keyword}), 200
-    except Exception as e:
-        msg = "Failed to process image: " + str(e)
-        log.error(msg)
-        return msg, 500
+    # Entity detection
+    entities = entity_detection.entity_detect(text, language)
+
+    return json.dumps({"entities": entities})
 
 
 if __name__ == "__main__":

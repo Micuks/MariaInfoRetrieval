@@ -4,13 +4,14 @@
   - [Overall design](#overall-design)
     - [About the search engine](#about-the-search-engine)
     - [Process the query](#process-the-query)
-      - [Queries that can divide into multi-keywords](#queries-that-can-divide-into-multi-keywords)
     - [Ranking documents](#ranking-documents)
       - [Cosine similarity for vector space model](#cosine-similarity-for-vector-space-model)
       - [TF-IDF](#tf-idf)
         - [TF](#tf)
         - [IDF](#idf)
     - [Results sorting](#results-sorting)
+      - [Queries that can divide into multi-keywords](#queries-that-can-divide-into-multi-keywords)
+      - [Pay more attention to query words appearing in title](#pay-more-attention-to-query-words-appearing-in-title)
     - [Parallel computing](#parallel-computing)
   - [Search by image](#search-by-image)
     - [Python microservice implementation](#python-microservice-implementation)
@@ -55,21 +56,6 @@ The Go language does not directly support Chinese text splitting in its standard
 library, and the Jieba library is specific to Python. However, there is a Go
 version of Jieba available named "gojieba", I use this for Chinese word
 segmentation.
-
-#### Queries that can divide into multi-keywords
-
-My SearchIndex function computes the cosine similarity for each word in the
-query against the vectors of the document, and then sums these scores to get a
-total score for the document. This total score is then adjusted based on term
-frequency, document length, and position of first query word. However, this
-score doesn't specifically reward documents that contain more of the query
-words.
-
-To boost documents that contain more of the query words, I modify the scoring
-function to count the number of query words that appear in each document, and
-then increase the score of the document based on this count. I achieved this by
-using a multiplier to the score, where the multiplier is a function of the
-number of query words that appear in the document.
 
 ```go
 // A new map to store the count of query words in each document
@@ -189,6 +175,23 @@ It adjusts the score of each document based on several factors:
 - The length of the document. The longer the document, the lower the score. This helps to prevent very long documents from getting artificially high scores simply because they have more words.
 - The position of the first query word in the document. The sooner a query word appears in the document, the higher the score.
 - These adjustments are added to the cosine similarity score to produce the final score for each document.
+
+#### Queries that can divide into multi-keywords
+
+My SearchIndex function computes the cosine similarity for each word in the
+query against the vectors of the document, and then sums these scores to get a
+total score for the document. This total score is then adjusted based on term
+frequency, document length, and position of first query word. However, this
+score doesn't specifically reward documents that contain more of the query
+words.
+
+To boost documents that contain more of the query words, I modify the scoring
+function to count the number of query words that appear in each document, and
+then increase the score of the document based on this count. I achieved this by
+using a multiplier to the score, where the multiplier is a function of the
+number of query words that appear in the document.
+
+#### Pay more attention to query words appearing in title
 
 ### Parallel computing
 

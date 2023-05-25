@@ -24,7 +24,7 @@ var epsilon = 1e-10
 
 // Words to ignore
 var stopWords = map[string]struct{}{
-	"_": {}, ",": {}, ".": {}, "和": {}, "and": {},
+	"_": {}, ",": {}, ".": {},
 }
 
 func isStopWord(word string) bool {
@@ -154,6 +154,8 @@ func SearchIndex(queryWords []string, page, resultsPerPage int) ([]SearchResult,
 	// Store the count of query words in each document. Let documents that
 	// include more query words get a higher score
 	queryWordCounts := make(map[string]int)
+	// Count of query words in each doc's title
+	titleQueryWordCounts := make(map[string]int)
 
 	// Mutex to protect concurrent writes to queryWordCounts
 	var mutex sync.Mutex
@@ -174,6 +176,9 @@ func SearchIndex(queryWords []string, page, resultsPerPage int) ([]SearchResult,
 				go func(w string, v DocumentVector, scoresChan chan float64) {
 					defer wg.Done()
 
+					// Ignore upper case
+					wi := strings.ToLower(w)
+
 					// Calculate score
 					score := cosineSimilarity(queryVector, v.Vector)
 
@@ -182,17 +187,22 @@ func SearchIndex(queryWords []string, page, resultsPerPage int) ([]SearchResult,
 					// - document length
 					// - position of first query word
 					frequency := float64(len(WordSplit(v.Doc.Keywords)))
-					position := float64(strings.Index(v.Doc.Keywords, w))
+					position := float64(strings.Index(v.Doc.Keywords, wi))
 					length := float64(len(v.Doc.Keywords))
 
 					adjustment := (1 + math.Log(frequency+1)) * (1 / (1 + math.Log(length+1)) * (1 / (1 + math.Log(position+1))))
 					score *= adjustment
 
 					// Increase the count of query words in this document
-					if strings.Contains(v.Doc.Keywords, w) {
+					if strings.Contains(v.Doc.Keywords, wi) || strings.Contains(strings.ToLower(v.Doc.Title), wi) {
 						// Guard the write with the mutex
 						mutex.Lock()
-						queryWordCounts[v.Doc.Id]++
+						if strings.Contains(v.Doc.Keywords, wi) {
+							queryWordCounts[v.Doc.Id]++
+						}
+						if strings.Contains(strings.ToLower(v.Doc.Title), wi) {
+							titleQueryWordCounts[v.Doc.Id]++
+						}
 						mutex.Unlock()
 					}
 					scoresChan <- score
@@ -219,6 +229,9 @@ func SearchIndex(queryWords []string, page, resultsPerPage int) ([]SearchResult,
 		// Boost the score of the document based on the number of query words it contains
 		totalScore *= float64(1 + queryWordCounts[id])
 
+		// Boost the score based on the number of query words in title
+		totalScore *= 1.2 * float64(1+titleQueryWordCounts[id])
+
 		// Build document summary
 		summaryDoc := buildSummaryDocument(idDocMap[id])
 		scoreMap[id] = &SearchResult{Doc: summaryDoc, Score: totalScore}
@@ -226,7 +239,7 @@ func SearchIndex(queryWords []string, page, resultsPerPage int) ([]SearchResult,
 
 	log.Info(">>> scoreMap")
 	for k, v := range scoreMap {
-		log.Info(k, ":", "Doc:", v.Doc, "Score:", v.Score)
+		log.Debug(k, ":", "Doc:", v.Doc, "Score:", v.Score)
 	}
 	log.Info("<<< scoreMap")
 

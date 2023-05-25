@@ -10,6 +10,7 @@ interface SearchResultProps {
   result: SearchResult;
 }
 
+// TODO: Implement adjust based on feedback
 const SearchResultItem: React.FC<SearchResultProps> = ({ result }) => {
   const [content, setContent] = useState("");
   const [contentFetched, setContentFetched] = useState<boolean>(false);
@@ -85,6 +86,31 @@ interface SearchResultsProps {
 }
 
 const SearchResults: React.FC<SearchResultsProps> = ({ results }) => {
+  const [adjustResults, setAdjustResults] = useState(results);
+
+  const handleFeedback = (resultId: string, score: number) => {
+    let newResults = [...adjustResults];
+
+    let index = newResults.findIndex((result) => result.id === resultId);
+    if (score === 1) {
+      if (index > 0) {
+        // Swap the item with the one before it to move it up
+        [newResults[index], newResults[index - 1]] = [
+          newResults[index - 1],
+          newResults[index],
+        ];
+      }
+    } else if (score === 0 && index < newResults.length - 1) {
+      // Swap the item with the one after it to move it down
+      [newResults[index], newResults[index + 1]] = [
+        newResults[index + 1],
+        newResults[index],
+      ];
+    }
+
+    setAdjustResults(newResults);
+  };
+
   console.debug(`Generate SearchResults for`);
   console.debug(results);
 

@@ -237,11 +237,12 @@ func SearchIndex(queryWords []string, page, resultsPerPage int) ([]SearchResult,
 		scoreMap[id] = &SearchResult{Doc: summaryDoc, Score: totalScore}
 	}
 
-	log.Info(">>> scoreMap")
+	log.Info(len(scoreMap), " results")
+	log.Debug(">>> scoreMap")
 	for k, v := range scoreMap {
 		log.Debug(k, ":", "Doc:", v.Doc, "Score:", v.Score)
 	}
-	log.Info("<<< scoreMap")
+	log.Debug("<<< scoreMap")
 
 	// Convert the scoreMap to a slice
 	results := make([]SearchResult, 0, len(scoreMap))

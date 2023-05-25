@@ -55,10 +55,14 @@ def image_to_keywords(file: str) -> tuple[str, int]:
     try:
         preds = model.predict(x)
         predictions = decode_predictions(preds, top=5)[0]
-        # Just return the top prediction
-        keyword = predictions[0][1]
-        log.info(keyword)
-        return (json.dumps({"keyword": keyword}), 200)
+        # Return top three predictions or all if predictions are less than three
+        if len(predictions) >= 3:
+            keywords = [pred[1] for pred in predictions[:3]]
+        else:
+            keywords = [pred[1] for pred in predictions]
+        keywords = " ".join(kw for kw in keywords)
+        log.info(keywords)
+        return (json.dumps({"keyword": keywords}), 200)
     except Exception as e:
         msg = "Failed to process image: " + str(e)
         log.error(msg)

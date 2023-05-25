@@ -22,6 +22,16 @@ var docs []Document
 var idfMap = make(map[string]float64) // To hold IDF values of all terms
 var epsilon = 1e-10
 
+// Words to ignore
+var stopWords = map[string]struct{}{
+	"_": {}, ",": {}, ".": {}, "和": {}, "and": {},
+}
+
+func isStopWord(word string) bool {
+	_, ok := stopWords[word]
+	return ok
+}
+
 // Build the index and calculate the IDF for all terms
 func BuildIndex(documents []Document) {
 	// Store documents
@@ -29,6 +39,8 @@ func BuildIndex(documents []Document) {
 
 	totalDocs := float64(len(documents))
 	docIndex := make(map[string][]Document)
+
+	log.Info("Number of documents loaded:", totalDocs)
 
 	// First, build the index, and doc's summary at the same time
 	for _, doc := range documents {
@@ -38,11 +50,12 @@ func BuildIndex(documents []Document) {
 		// Build the index
 		words := WordSplit(doc.Keywords)
 		for _, word := range words {
-			docIndex[word] = append(docIndex[word], doc)
+			if !isStopWord(word) {
+				docIndex[word] = append(docIndex[word], doc)
+			}
 		}
 	}
 
-	log.Info("totalDocs:", totalDocs)
 	// Second, calculate the IDF values for all words
 	for word := range docIndex {
 		if _, ok := idfMap[word]; !ok {
@@ -59,14 +72,6 @@ func BuildIndex(documents []Document) {
 			index[word] = append(index[word], docVector)
 		}
 	}
-
-	// Debug
-	// for word, docs := range index {
-	// 	log.Debug(word)
-	// 	for _, doc := range docs {
-	// 		log.Debug(word, doc)
-	// 	}
-	// }
 
 }
 
@@ -146,6 +151,13 @@ func SearchIndex(queryWords []string, page, resultsPerPage int) ([]SearchResult,
 		}
 	}
 
+	// Store the count of query words in each document. Let documents that
+	// include more query words get a higher score
+	queryWordCounts := make(map[string]int)
+
+	// Mutex to protect concurrent writes to queryWordCounts
+	var mutex sync.Mutex
+
 	// Parallel result computation
 	scoresChansMap := make(map[string]chan float64)
 	for id, count := range vectorCounts {
@@ -176,6 +188,13 @@ func SearchIndex(queryWords []string, page, resultsPerPage int) ([]SearchResult,
 					adjustment := (1 + math.Log(frequency+1)) * (1 / (1 + math.Log(length+1)) * (1 / (1 + math.Log(position+1))))
 					score *= adjustment
 
+					// Increase the count of query words in this document
+					if strings.Contains(v.Doc.Keywords, w) {
+						// Guard the write with the mutex
+						mutex.Lock()
+						queryWordCounts[v.Doc.Id]++
+						mutex.Unlock()
+					}
 					scoresChan <- score
 				}(word, vector, scoresChansMap[vector.Doc.Id])
 			}
@@ -197,6 +216,10 @@ func SearchIndex(queryWords []string, page, resultsPerPage int) ([]SearchResult,
 		for score := range scoresChan {
 			totalScore += score
 		}
+		// Boost the score of the document based on the number of query words it contains
+		totalScore *= float64(1 + queryWordCounts[id])
+
+		// Build document summary
 		summaryDoc := buildSummaryDocument(idDocMap[id])
 		scoreMap[id] = &SearchResult{Doc: summaryDoc, Score: totalScore}
 	}

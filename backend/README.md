@@ -4,6 +4,7 @@
   - [Overall design](#overall-design)
     - [About the search engine](#about-the-search-engine)
     - [Process the query](#process-the-query)
+      - [Queries that can divide into multi-keywords](#queries-that-can-divide-into-multi-keywords)
     - [Ranking documents](#ranking-documents)
       - [Cosine similarity for vector space model](#cosine-similarity-for-vector-space-model)
       - [TF-IDF](#tf-idf)
@@ -54,6 +55,65 @@ The Go language does not directly support Chinese text splitting in its standard
 library, and the Jieba library is specific to Python. However, there is a Go
 version of Jieba available named "gojieba", I use this for Chinese word
 segmentation.
+
+#### Queries that can divide into multi-keywords
+
+My SearchIndex function computes the cosine similarity for each word in the
+query against the vectors of the document, and then sums these scores to get a
+total score for the document. This total score is then adjusted based on term
+frequency, document length, and position of first query word. However, this
+score doesn't specifically reward documents that contain more of the query
+words.
+
+To boost documents that contain more of the query words, I modify the scoring
+function to count the number of query words that appear in each document, and
+then increase the score of the document based on this count. I achieved this by
+using a multiplier to the score, where the multiplier is a function of the
+number of query words that appear in the document.
+
+```go
+// A new map to store the count of query words in each document
+queryWordCounts := make(map[string]int)
+
+// ...
+
+// In the for loop where you compute the scores for each document:
+go func(w string, v DocumentVector, scoresChan chan float64) {
+    defer wg.Done()
+
+    // Calculate score
+    score := cosineSimilarity(queryVector, v.Vector)
+
+    // Adjust the score based on:
+    // -  frequency of query words
+    // - document length
+    // - position of first query word
+    // ...
+
+    // Increase the count of query words in this document
+    if strings.Contains(v.Doc.Keywords, w) {
+        queryWordCounts[v.Doc.Id]++
+    }
+
+    scoresChan <- score
+}(word, vector, scoresChansMap[vector.Doc.Id])
+
+// ...
+
+// In the for loop where you collect the results and compute the total score for each document:
+for id, scoresChan := range scoresChansMap {
+    totalScore := 0.0
+    for score := range scoresChan {
+        totalScore += score
+    }
+    // Boost the score of the document based on the number of query words it contains
+    totalScore *= float64(1 + queryWordCounts[id])
+    summaryDoc := buildSummaryDocument(idDocMap[id])
+    scoreMap[id] = &SearchResult{Doc: summaryDoc, Score: totalScore}
+}
+
+// ...
+```
 
 ### Ranking documents
 

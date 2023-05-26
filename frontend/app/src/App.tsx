@@ -103,7 +103,7 @@ const App: React.FC = () => {
       {/* Placeholder */}
       {isSearching && <div className="Placeholder"></div>}
       <SearchResults results={results} />
-      {/* Add Pagination component here*/}
+      {/* Pagination component */}
       <Pagination currentPage={currentPage} onPageChange={handlePageChange} />
     </div>
   );

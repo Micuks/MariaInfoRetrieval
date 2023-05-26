@@ -8,10 +8,14 @@ import { backend_url } from "../utils/config";
 
 interface SearchResultProps {
   result: SearchResult;
+  onFeedback: (resultId: string, score: number) => void;
 }
 
 // TODO: Implement adjust based on feedback
-const SearchResultItem: React.FC<SearchResultProps> = ({ result }) => {
+const SearchResultItem: React.FC<SearchResultProps> = ({
+  result,
+  onFeedback,
+}) => {
   const [content, setContent] = useState("");
   const [contentFetched, setContentFetched] = useState<boolean>(false);
   const [isFolded, setIsFolded] = useState(true); // new state
@@ -58,7 +62,10 @@ const SearchResultItem: React.FC<SearchResultProps> = ({ result }) => {
       body: JSON.stringify({ resultId, score }),
     })
       .then((response) => response.json())
-      .then((data) => console.log(data))
+      .then((data) => {
+        console.log(data);
+        onFeedback(resultId, score);
+      })
       .catch((error) => console.error("Error: ", error));
   };
 
@@ -88,6 +95,10 @@ interface SearchResultsProps {
 const SearchResults: React.FC<SearchResultsProps> = ({ results }) => {
   const [adjustResults, setAdjustResults] = useState(results);
 
+  useEffect(() => {
+    setAdjustResults(results);
+  }, [results]);
+
   const handleFeedback = (resultId: string, score: number) => {
     let newResults = [...adjustResults];
 
@@ -116,8 +127,12 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results }) => {
 
   return (
     <div>
-      {results.map((result, index) => (
-        <SearchResultItem key={`${result.id}-${index}`} result={result} />
+      {adjustResults.map((result, index) => (
+        <SearchResultItem
+          key={`${result.id}-${index}`}
+          result={result}
+          onFeedback={handleFeedback}
+        />
       ))}
     </div>
   );

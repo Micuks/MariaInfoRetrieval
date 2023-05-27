@@ -18,8 +18,6 @@ type KeywordResponse struct {
 	Keyword string `json:"keyword"`
 }
 
-var image_server_url = "http://47.92.133.82:9021"
-
 func GetKeywordsFromImage(imagePath string) (string, error) {
 	// Prepare a form that you will submit to that URL.
 	var b bytes.Buffer
@@ -42,7 +40,7 @@ func GetKeywordsFromImage(imagePath string) (string, error) {
 	w.Close()
 
 	// Now that you have a form, you can submit it to your handler
-	req, err := http.NewRequest("POST", image_server_url+"/image_to_keywords", &b)
+	req, err := http.NewRequest("POST", python_server_url+"/image_to_keywords", &b)
 	if err != nil {
 		log.Error(err.Error())
 		return "", err

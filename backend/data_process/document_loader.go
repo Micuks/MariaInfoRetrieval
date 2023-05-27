@@ -36,6 +36,9 @@ func LoadDocuments(dir string) ([]Document, error) {
 			return nil, err
 		}
 
+		// Set language of documents
+		setLang(docs, filename)
+
 		documents = append(documents, docs...)
 
 		f.Close()
@@ -54,4 +57,17 @@ func LoadDocuments(dir string) ([]Document, error) {
 	}
 
 	return documents, nil
+}
+
+func setLang(docs []Document, filename string) {
+	var lang Language
+	if filename == "oiwiki.json" {
+		lang = Chinese
+	} else {
+		lang = English
+	}
+
+	for _, doc := range docs {
+		doc.Lang = lang
+	}
 }

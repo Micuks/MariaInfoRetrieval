@@ -83,6 +83,19 @@ func main() {
 		c.JSON(200, gin.H{"results": result.Results, "keywords": keywords})
 	})
 
+	// Entities and hot words
+	r.POST("/extract_info", func(c *gin.Context) {
+		doc_id := c.Query("id")
+
+		// Extract entities and hot words
+		result, err := query_process.ExtractInfo(doc_id)
+		if err != nil {
+			c.JSON(500, err.Error())
+			return
+		}
+		c.JSON(200, gin.H{"entities": result.Entities, "hot_words": result.HotWords})
+	})
+
 	// Handle feedback
 	r.POST("/feedback", func(c *gin.Context) {
 		var feedback Feedback

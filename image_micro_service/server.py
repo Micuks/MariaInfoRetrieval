@@ -3,6 +3,9 @@ import json
 import logging
 import entity_detection
 import image_detection
+from collections import Counter
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 
 
 log = logging.getLogger("image_to_keywords")
@@ -44,7 +47,15 @@ def extract_info():
     # Entity detection
     entities = entity_detection.entity_detect(text, language)
 
-    return json.dumps({"entities": entities})
+    # Extract hot words
+    stop_words = (
+        set(stopwords.words("englidh")) if language == "en" else set()
+    )  # Add Chinese stopwords if needed
+    word_tokens = word_tokenize(text)
+    words = [w for w in word_tokens if not w in stop_words]
+    hot_words = dict(Counter(words).most_common(10))
+
+    return json.dumps({"entities": entities, "hot_words": hot_words})
 
 
 if __name__ == "__main__":

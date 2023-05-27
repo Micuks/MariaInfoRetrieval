@@ -7,6 +7,12 @@ type Document struct {
 	Keywords string `json:"keywords"`
 	URL      string `json:"url"`
 	Date     string `json:"date"`
+	Lang     Language
+}
+
+type DocumentAbstract struct {
+	Entities string `json:"entities"`
+	HotWords string `json:"hot_words"`
 }
 
 type SummaryDocument struct {
@@ -29,7 +35,23 @@ type Feedback struct {
 }
 
 // Struct of PerformSearch's response
-type Response struct {
+type SearchResponse struct {
 	Code    int            `json:"code"`
 	Results []SearchResult `json:"results"`
+}
+
+type Language int8
+
+const (
+	English Language = iota
+	Chinese
+)
+
+func (l Language) String() string {
+	if l == English {
+		return "en"
+	} else if l == Chinese {
+		return "cn"
+	}
+	return "undefined"
 }

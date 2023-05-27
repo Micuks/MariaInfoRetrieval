@@ -1,29 +1,55 @@
 import { renderToString } from "react-dom/server";
 import "./SearchResults.css";
 import React, { useEffect, useState } from "react";
-import { SearchResult } from "../utils/types";
+import { DocumentAbstract, SearchResult } from "../utils/types";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { atomDark as codeTheme } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { backend_url } from "../utils/config";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow,
+  Paper,
+} from "@mui/material";
 
 interface SearchResultProps {
   result: SearchResult;
   onFeedback: (resultId: string, score: number) => void;
 }
 
-// TODO: Implement adjust based on feedback
 const SearchResultItem: React.FC<SearchResultProps> = ({
   result,
   onFeedback,
 }) => {
   const [content, setContent] = useState("");
+  const [abstract, setAbstract] = useState(<div>Loading abstract...</div>);
   const [contentFetched, setContentFetched] = useState<boolean>(false);
   const [isFolded, setIsFolded] = useState(true); // new state
   const toggleFold = () => {
     setIsFolded(!isFolded);
   }; // function to toggle the fold
+  // load
 
   useEffect(() => {
+    // Abstract fetch
+    fetch(`${backend_url}/extract_info?id=${result.id}`)
+      .then((response) => response.json())
+      .then((data) => {
+        console.debug("data: ", data);
+        let parsedData: DocumentAbstract = {
+          entities: data.entities,
+          hot_words: data.hot_words,
+        };
+        setAbstract(buildAbstract(parsedData));
+      })
+      .catch((error) => {
+        console.error("Error loading abstract: ", error);
+        setAbstract(<div>{"Failed: " + error}</div>);
+      });
+
+    // Content fetch
     if (!isFolded && !contentFetched) {
       fetch(`${backend_url}/document?id=${result.id}`)
         .then((response) => response.json())
@@ -34,6 +60,50 @@ const SearchResultItem: React.FC<SearchResultProps> = ({
         });
     }
   }, [isFolded, content, contentFetched, result]);
+
+  const buildAbstract = (data: DocumentAbstract) => {
+    let entitiesTable = (
+      <TableContainer component={Paper}>
+        <h2>Entities</h2>
+        <Table>
+          <TableBody>
+            {Object.entries(data.entities).map(([key, value]) => {
+              console.debug(key, value);
+              return (
+                <TableRow key={key}>
+                  <TableCell>{key}</TableCell>
+                  <TableCell>{value}</TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    );
+
+    let hotWordsTable = (
+      <TableContainer component={Paper}>
+        <h2>Hot Words</h2>
+        <Table>
+          <TableBody>
+            {Object.entries(data.hot_words).map(([key, value]) => (
+              <TableRow key={key}>
+                <TableCell>{key}</TableCell>
+                <TableCell>{value}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    );
+
+    return (
+      <div>
+        {entitiesTable}
+        {hotWordsTable}
+      </div>
+    );
+  };
 
   const renderCodeBlocks = (content: string) => {
     let parser = new DOMParser();
@@ -75,6 +145,7 @@ const SearchResultItem: React.FC<SearchResultProps> = ({
         <div dangerouslySetInnerHTML={{ __html: result.title }} />
       </h2>
       {!isFolded && <div dangerouslySetInnerHTML={{ __html: content }} />}
+      {abstract}
       <p>{result.url}</p>
       <p>{result.date}</p>
       <p>Relevance: {result.score}</p>

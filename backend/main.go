@@ -84,7 +84,7 @@ func main() {
 	})
 
 	// Entities and hot words
-	r.POST("/extract_info", func(c *gin.Context) {
+	r.GET("/extract_info", func(c *gin.Context) {
 		doc_id := c.Query("id")
 
 		// Extract entities and hot words

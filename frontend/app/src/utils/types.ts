@@ -6,3 +6,8 @@ export interface SearchResult {
   date: string;
   score: number;
 }
+
+export interface DocumentAbstract {
+  entities: { [entity: string]: number };
+  hot_words: { [word: string]: number };
+}

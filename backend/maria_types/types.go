@@ -11,8 +11,8 @@ type Document struct {
 }
 
 type DocumentAbstract struct {
-	Entities string `json:"entities"`
-	HotWords string `json:"hot_words"`
+	Entities map[string]int `json:"entities"`
+	HotWords map[string]int `json:"hot_words"`
 }
 
 type SummaryDocument struct {

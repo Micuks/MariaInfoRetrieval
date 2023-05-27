@@ -8,9 +8,9 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
 
-log = logging.getLogger("image_to_keywords")
-
 app = Flask(__name__)
+log = app.logger
+log.setLevel(logging.DEBUG)
 
 
 @app.route("/image_to_keywords", methods=["POST"])
@@ -37,6 +37,7 @@ def extract_info():
     data = request.get_json()
     text = data.get("text")
     language = data.get("language")
+    log.info("Data language: " + language)
 
     if not text or not language:
         return "Invalid request: no text or no language", 400
@@ -49,14 +50,20 @@ def extract_info():
 
     # Extract hot words
     stop_words = (
-        set(stopwords.words("englidh")) if language == "en" else set()
+        set(stopwords.words("english")) if language == "en" else set()
     )  # Add Chinese stopwords if needed
     word_tokens = word_tokenize(text)
     words = [w for w in word_tokens if not w in stop_words]
     hot_words = dict(Counter(words).most_common(10))
 
-    return json.dumps({"entities": entities, "hot_words": hot_words})
+    entities = [e["text"] for e in entities]
+    entities = dict(Counter(entities).most_common(10))
+    entities = {k: v for k, v in entities.items() if v > 1}
+
+    jsonResponse = json.dumps({"entities": entities, "hot_words": hot_words})
+    log.debug(jsonResponse)
+    return jsonResponse
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=9021)
+    app.run(host="0.0.0.0", port=9021, debug=True)

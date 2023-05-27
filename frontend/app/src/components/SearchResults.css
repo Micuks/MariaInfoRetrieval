@@ -60,3 +60,10 @@ button.feedback {
 button.feedback:hover {
   background-color: #0051d6;
 }
+
+.maxWidthCell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

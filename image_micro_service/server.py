@@ -1,3 +1,4 @@
+from string import punctuation
 from flask import Flask, request
 import json
 import logging
@@ -53,11 +54,14 @@ def extract_info():
         set(stopwords.words("english")) if language == "en" else set()
     )  # Add Chinese stopwords if needed
     word_tokens = word_tokenize(text)
-    words = [w for w in word_tokens if not w in stop_words]
-    hot_words = dict(Counter(words).most_common(10))
+    words = [
+        w for w in word_tokens if not w in stop_words and not w in punctuation
+    ]
+
+    hot_words = dict(Counter(words).most_common(5))
 
     entities = [e["text"] for e in entities]
-    entities = dict(Counter(entities).most_common(10))
+    entities = dict(Counter(entities).most_common(5))
     entities = {k: v for k, v in entities.items() if v > 1}
 
     jsonResponse = json.dumps({"entities": entities, "hot_words": hot_words})

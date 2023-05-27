@@ -7,12 +7,20 @@ import { atomDark as codeTheme } from "react-syntax-highlighter/dist/esm/styles/
 import { backend_url } from "../utils/config";
 import {
   Table,
+  TableHead,
   TableBody,
   TableCell,
   TableContainer,
   TableRow,
   Paper,
 } from "@mui/material";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+
+const darkTheme = createTheme({
+  palette: {
+    mode: "dark",
+  },
+});
 
 interface SearchResultProps {
   result: SearchResult;
@@ -63,38 +71,64 @@ const SearchResultItem: React.FC<SearchResultProps> = ({
 
   const buildAbstract = (data: DocumentAbstract) => {
     let entitiesTable = (
-      <TableContainer component={Paper}>
-        <h2>Entities</h2>
-        <Table>
-          <TableBody>
-            {Object.entries(data.entities).map(([key, value]) => {
-              console.debug(key, value);
-              return (
-                <TableRow key={key}>
-                  <TableCell>{key}</TableCell>
-                  <TableCell>{value}</TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <ThemeProvider theme={darkTheme}>
+        <TableContainer component={Paper}>
+          <h2 style={{ padding: "10px" }}>Entities</h2>
+          <Table sx={{ tableLayout: "fixed" }}>
+            <TableHead>
+              <TableRow>
+                <TableCell className="maxWidthCell">Entity</TableCell>
+                <TableCell className="maxWidthCell">Frequency</TableCell>
+              </TableRow>
+            </TableHead>
+
+            <TableBody>
+              {Object.entries(data.entities).map(([key, value]) => {
+                console.debug(key, value);
+                return (
+                  <TableRow key={key}>
+                    <TableCell className="maxWidthCell">
+                      <div className="maxWidthCell">{key}</div>
+                    </TableCell>
+                    <TableCell className="maxWidthCell">
+                      <div className="maxWidthCell">{value}</div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </ThemeProvider>
     );
 
     let hotWordsTable = (
-      <TableContainer component={Paper}>
-        <h2>Hot Words</h2>
-        <Table>
-          <TableBody>
-            {Object.entries(data.hot_words).map(([key, value]) => (
-              <TableRow key={key}>
-                <TableCell>{key}</TableCell>
-                <TableCell>{value}</TableCell>
+      <ThemeProvider theme={darkTheme}>
+        <TableContainer component={Paper}>
+          <h2 style={{ padding: "10px" }}>Hot Words</h2>
+          <Table sx={{ tableLayout: "fixed" }}>
+            <TableHead>
+              <TableRow>
+                <TableCell>Word</TableCell>
+                <TableCell>Frequency</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+
+            <TableBody>
+              {Object.entries(data.hot_words).map(([key, value]) => (
+                <TableRow key={key}>
+                  <TableCell className="maxWidthCell">
+                    <div className="maxWidthCell">{key}</div>
+                  </TableCell>
+                  <TableCell className="maxWidthCell">
+                    <div className="maxWidthCell">{value}</div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </ThemeProvider>
     );
 
     return (

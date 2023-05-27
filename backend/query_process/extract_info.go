@@ -39,7 +39,7 @@ func ExtractInfo(doc_id string) (DocumentAbstract, error) {
 		return DocumentAbstract{}, errors.New(string(body))
 	}
 
-	log.Info("Extract info for doc ", doc_id, " entities: ", result.Entities, " hot_words: ", result.HotWords)
+	log.Debug("Extract info for doc ", doc_id, " entities: ", result.Entities, " hot_words: ", result.HotWords)
 
 	return result, nil
 }

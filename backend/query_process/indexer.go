@@ -51,6 +51,8 @@ func BuildIndex(documents []Document) {
 		words := WordSplit(doc.Keywords)
 		for _, word := range words {
 			if !isStopWord(word) {
+				// To lower case
+				word = strings.ToLower(word)
 				docIndex[word] = append(docIndex[word], doc)
 			}
 		}
@@ -59,6 +61,7 @@ func BuildIndex(documents []Document) {
 	// Second, calculate the IDF values for all words
 	for word := range docIndex {
 		if _, ok := idfMap[word]; !ok {
+			word = strings.ToLower(word)
 			idfMap[word] = math.Log(totalDocs / float64(len(docIndex[word])))
 		}
 	}
@@ -69,6 +72,7 @@ func BuildIndex(documents []Document) {
 		words := WordSplit(doc.Keywords)
 
 		for _, word := range words {
+			word = strings.ToLower(word)
 			index[word] = append(index[word], docVector)
 		}
 	}
@@ -82,6 +86,7 @@ func buildDocumentVector(doc Document) DocumentVector {
 
 	// Calculate TF for each term in the document
 	for _, word := range words {
+		word = strings.ToLower(word)
 		vector[word] += 1.0 / wordCount
 	}
 
@@ -89,6 +94,7 @@ func buildDocumentVector(doc Document) DocumentVector {
 	// vector
 	magnitude := 0.0
 	for word, tf := range vector {
+		word = strings.ToLower(word)
 		tfIdf := tf * idfMap[word]
 		vector[word] = tfIdf
 		magnitude += tfIdf * tfIdf
@@ -100,6 +106,7 @@ func buildDocumentVector(doc Document) DocumentVector {
 
 		// Divide each term's TF-IDF score with the magnitude to get the unit vector
 		for word := range vector {
+			word = strings.ToLower(word)
 			vector[word] /= sqrtMagnitude
 		}
 	}
@@ -144,6 +151,7 @@ func SearchIndex(queryWords []string, page, resultsPerPage int) ([]SearchResult,
 	vectorCounts := make(map[string]int)
 	// Count the total number of vectors for each document ID across all query words
 	for _, word := range queryWords {
+		word = strings.ToLower(word)
 		if vectors, ok := index[word]; ok {
 			for _, vector := range vectors {
 				vectorCounts[vector.Doc.Id]++
@@ -169,6 +177,7 @@ func SearchIndex(queryWords []string, page, resultsPerPage int) ([]SearchResult,
 	var wg sync.WaitGroup
 
 	for _, word := range queryWords {
+		word = strings.ToLower(word)
 		if vectors, ok := index[word]; ok {
 			for _, vector := range vectors {
 
@@ -281,12 +290,14 @@ func buildQueryVector(queryWords []string) map[string]float64 {
 
 	// Calculate TF for each term in the query
 	for _, word := range queryWords {
+		word = strings.ToLower(word)
 		vector[word] += 1.0 / wordCount
 	}
 
 	// Multiply TF with IDF for each term to get TF-IDF score and normalize the vector
 	magnitude := 0.0
 	for word, tf := range vector {
+		word = strings.ToLower(word)
 		idf, ok := idfMap[word]
 		if !ok {
 			// Skip non-indexed words
@@ -315,6 +326,7 @@ func cosineSimilarity(vector1, vector2 map[string]float64) float64 {
 	magnitude1 := 0.0
 	magnitude2 := 0.0
 	for word, value := range vector1 {
+		word = strings.ToLower(word)
 		dotProduct += value * vector2[word]
 		magnitude1 += value * value
 	}

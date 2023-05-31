@@ -31,7 +31,7 @@ func main() {
 	// Load and index documents
 	docs, err := data_process.LoadDocuments("./data")
 	if err != nil {
-		log.Error("Failed to load documents: %v", err)
+		log.Errorf("Failed to load documents: %v", err)
 		return
 	}
 	query_process.BuildIndex(docs)

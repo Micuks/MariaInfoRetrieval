@@ -15,6 +15,7 @@ import {
   Paper,
 } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { setSyntheticTrailingComments } from "typescript";
 
 const darkTheme = createTheme({
   palette: {
@@ -34,28 +35,35 @@ const SearchResultItem: React.FC<SearchResultProps> = ({
   const [content, setContent] = useState("");
   const [abstract, setAbstract] = useState(<div>Loading abstract...</div>);
   const [contentFetched, setContentFetched] = useState<boolean>(false);
+  const [abstractFetched, setAbstractFetched] = useState<boolean>(false);
   const [isFolded, setIsFolded] = useState(true); // new state
   const toggleFold = () => {
     setIsFolded(!isFolded);
   }; // function to toggle the fold
-  // load
+  const [entities, setEntities] = useState<{ [entity: string]: number }>({});
+  const [hotWords, setHotWords] = useState<{ [entity: string]: number }>({});
 
   useEffect(() => {
     // Abstract fetch
-    fetch(`${backend_url}/extract_info?id=${result.id}`)
-      .then((response) => response.json())
-      .then((data) => {
-        console.debug("data: ", data);
-        let parsedData: DocumentAbstract = {
-          entities: data.entities,
-          hot_words: data.hot_words,
-        };
-        setAbstract(buildAbstract(parsedData));
-      })
-      .catch((error) => {
-        console.error("Error loading abstract: ", error);
-        setAbstract(<div>{"Failed: " + error}</div>);
-      });
+    if (!abstractFetched) {
+      fetch(`${backend_url}/extract_info?id=${result.id}`)
+        .then((response) => response.json())
+        .then((data) => {
+          console.debug("data: ", data);
+          let parsedData: DocumentAbstract = {
+            entities: data.entities,
+            hot_words: data.hot_words,
+          };
+          // Set states
+          setEntities(parsedData.entities);
+          setHotWords(parsedData.hot_words);
+          setAbstractFetched(true);
+        })
+        .catch((error) => {
+          console.error("Error loading abstract: ", error);
+          setAbstract(<div>{"Failed: " + error}</div>);
+        });
+    }
 
     // Content fetch
     if (!isFolded && !contentFetched) {
@@ -67,69 +75,126 @@ const SearchResultItem: React.FC<SearchResultProps> = ({
           setContentFetched(true);
         });
     }
-  }, [isFolded, content, contentFetched, result]);
 
-  const buildAbstract = (data: DocumentAbstract) => {
-    let entitiesTable = (
-      <ThemeProvider theme={darkTheme}>
-        <TableContainer component={Paper}>
-          <h2 style={{ padding: "10px" }}>Entities</h2>
-          <Table sx={{ tableLayout: "fixed" }}>
-            <TableHead>
-              <TableRow>
-                <TableCell className="maxWidthCell">Entity</TableCell>
-                <TableCell className="maxWidthCell">Frequency</TableCell>
-              </TableRow>
-            </TableHead>
+    // Update abstract
+    setAbstract(buildAbstract());
+  }, [isFolded, content, contentFetched, result, entities, hotWords]);
 
-            <TableBody>
-              {Object.entries(data.entities).map(([key, value]) => {
-                console.debug(key, value);
-                return (
-                  <TableRow key={key}>
-                    <TableCell className="maxWidthCell">
-                      <div className="maxWidthCell">{key}</div>
-                    </TableCell>
-                    <TableCell className="maxWidthCell">
-                      <div className="maxWidthCell">{value}</div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </ThemeProvider>
-    );
+  const handleEntityFeedback = (
+    resultId: string,
+    entity: string,
+    score: number
+  ) => {
+    fetch(`${backend_url}/entity_feedback`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ resultId, entity, score }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((error) => console.error("Error: ", error));
 
-    let hotWordsTable = (
-      <ThemeProvider theme={darkTheme}>
-        <TableContainer component={Paper}>
-          <h2 style={{ padding: "10px" }}>Hot Words</h2>
-          <Table sx={{ tableLayout: "fixed" }}>
-            <TableHead>
-              <TableRow>
-                <TableCell>Word</TableCell>
-                <TableCell>Frequency</TableCell>
-              </TableRow>
-            </TableHead>
+    if (score === 0) {
+      setEntities((prevEntities) => {
+        let newEntities = { ...prevEntities };
+        delete newEntities[entity];
+        return newEntities;
+      });
+    }
+  };
 
-            <TableBody>
-              {Object.entries(data.hot_words).map(([key, value]) => (
-                <TableRow key={key}>
-                  <TableCell className="maxWidthCell">
-                    <div className="maxWidthCell">{key}</div>
-                  </TableCell>
-                  <TableCell className="maxWidthCell">
-                    <div className="maxWidthCell">{value}</div>
-                  </TableCell>
+  const handleHotWordFeedback = (
+    resultId: string,
+    hotWord: string,
+    score: number
+  ) => {
+    fetch(`${backend_url}/hotwor_feedback`, {
+      method: "PORT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ resultId, hotWord, score }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+
+    if (score === 0) {
+      setHotWords((prevHotWords) => {
+        let newHotWords = { ...prevHotWords };
+        delete newHotWords[hotWord];
+        return newHotWords;
+      });
+    }
+  };
+
+  const buildAbstract = () => {
+    const buildTable = (
+      title: string,
+      name: string,
+      entries: { [s: string]: number }
+    ) => {
+      return (
+        <ThemeProvider theme={darkTheme}>
+          <TableContainer component={Paper}>
+            <h2 style={{ padding: "10px" }}>{title}</h2>
+            <Table sx={{ tableLayout: "fixed" }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell className="maxWidthCell">{name}</TableCell>
+                  <TableCell className="maxWidthCell">Frequency</TableCell>
+                  <TableCell className="maxWidthCell">Feedback</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </ThemeProvider>
-    );
+              </TableHead>
+
+              <TableBody>
+                {Object.entries(entries).map(([key, value]) => {
+                  console.debug(key, value);
+                  return (
+                    <TableRow key={key}>
+                      <TableCell className="maxWidthCell">
+                        <div className="maxWidthCell">{key}</div>
+                      </TableCell>
+                      <TableCell className="maxWidthCell">
+                        <div className="maxWidthCell">{value}</div>
+                      </TableCell>
+                      <TableCell>
+                        <button
+                          className="feedback"
+                          onClick={() =>
+                            handleEntityFeedback(result.id, key, 1)
+                          }
+                        >
+                          👍
+                        </button>
+                        <button
+                          className="feedback"
+                          onClick={() =>
+                            handleEntityFeedback(result.id, key, 0)
+                          }
+                        >
+                          👎
+                        </button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </ThemeProvider>
+      );
+    };
+    const entitiesTable = buildTable("Entities", "Entity", entities);
+    const hotWordsTable = buildTable("HotWords", "Hot word", hotWords);
 
     return (
       <div>

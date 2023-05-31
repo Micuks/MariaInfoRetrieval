@@ -80,67 +80,63 @@ const SearchResultItem: React.FC<SearchResultProps> = ({
     setAbstract(buildAbstract());
   }, [isFolded, content, contentFetched, result, entities, hotWords]);
 
-  const handleEntityFeedback = (
-    resultId: string,
-    entity: string,
-    score: number
+  const generateItemFeedbackHandler = (
+    items: { [s: string]: number },
+    setItems: React.Dispatch<React.SetStateAction<{ [s: string]: number }>>,
+    api: string
   ) => {
-    fetch(`${backend_url}/entity_feedback`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ resultId, entity, score }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
+    return (resultId: string, item: string, score: number) => {
+      fetch(api, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ resultId, item, score }),
       })
-      .catch((error) => console.error("Error: ", error));
+        .then((response) => response.json())
+        .then((data) => {
+          console.log(data);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
 
-    if (score === 0) {
-      setEntities((prevEntities) => {
-        let newEntities = { ...prevEntities };
-        delete newEntities[entity];
-        return newEntities;
-      });
-    }
+      let newItems = { ...items };
+      let index = Object.entries(newItems).findIndex(
+        (entry) => entry[0] == item
+      );
+      if (score === 1) {
+        // Swap the item with the one before it to move it top
+        newItems[item] += 1;
+      } else if (score === 0) {
+        if (index == newItems.length - 1 || newItems[item] === 1) {
+          delete newItems[item];
+        } else {
+          newItems[item] -= 1;
+        }
+      }
+      setItems(newItems);
+    };
   };
 
-  const handleHotWordFeedback = (
-    resultId: string,
-    hotWord: string,
-    score: number
-  ) => {
-    fetch(`${backend_url}/hotwor_feedback`, {
-      method: "PORT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ resultId, hotWord, score }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+  const handleEntityFeedback = generateItemFeedbackHandler(
+    entities,
+    setEntities,
+    `${backend_url}/entity_feedback`
+  );
 
-    if (score === 0) {
-      setHotWords((prevHotWords) => {
-        let newHotWords = { ...prevHotWords };
-        delete newHotWords[hotWord];
-        return newHotWords;
-      });
-    }
-  };
+  const handleHotWordFeedback = generateItemFeedbackHandler(
+    hotWords,
+    setHotWords,
+    `${backend_url}/hotword_feedback`
+  );
 
   const buildAbstract = () => {
     const buildTable = (
       title: string,
       name: string,
-      entries: { [s: string]: number }
+      entries: { [s: string]: number },
+      feedbackHandler: (resultId: string, key: string, score: number) => void
     ) => {
       return (
         <ThemeProvider theme={darkTheme}>
@@ -169,17 +165,13 @@ const SearchResultItem: React.FC<SearchResultProps> = ({
                       <TableCell>
                         <button
                           className="feedback"
-                          onClick={() =>
-                            handleEntityFeedback(result.id, key, 1)
-                          }
+                          onClick={() => feedbackHandler(result.id, key, 1)}
                         >
                           👍
                         </button>
                         <button
                           className="feedback"
-                          onClick={() =>
-                            handleEntityFeedback(result.id, key, 0)
-                          }
+                          onClick={() => feedbackHandler(result.id, key, 0)}
                         >
                           👎
                         </button>
@@ -193,8 +185,18 @@ const SearchResultItem: React.FC<SearchResultProps> = ({
         </ThemeProvider>
       );
     };
-    const entitiesTable = buildTable("Entities", "Entity", entities);
-    const hotWordsTable = buildTable("HotWords", "Hot word", hotWords);
+    const entitiesTable = buildTable(
+      "Entities",
+      "Entity",
+      entities,
+      handleEntityFeedback
+    );
+    const hotWordsTable = buildTable(
+      "HotWords",
+      "Hot word",
+      hotWords,
+      handleHotWordFeedback
+    );
 
     return (
       <div>

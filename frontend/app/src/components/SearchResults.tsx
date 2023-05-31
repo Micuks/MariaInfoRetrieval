@@ -42,6 +42,9 @@ const SearchResultItem: React.FC<SearchResultProps> = ({
   }; // function to toggle the fold
   const [entities, setEntities] = useState<{ [entity: string]: number }>({});
   const [hotWords, setHotWords] = useState<{ [entity: string]: number }>({});
+  // Regex info extract
+  const [regex, setRegex] = useState<string>("");
+  const [regexResult, setRegexResult] = useState<string | null>(null);
 
   useEffect(() => {
     // Abstract fetch
@@ -79,6 +82,12 @@ const SearchResultItem: React.FC<SearchResultProps> = ({
     // Update abstract
     setAbstract(buildAbstract());
   }, [isFolded, content, contentFetched, result, entities, hotWords]);
+
+  const handleRegexSubmit = () => {
+    const matched = content.match(new RegExp(regex));
+    console.log(matched);
+    setRegexResult(matched ? matched[0] : "No matches found");
+  };
 
   const generateItemFeedbackHandler = (
     items: { [s: string]: number },
@@ -250,6 +259,24 @@ const SearchResultItem: React.FC<SearchResultProps> = ({
       <p>{result.url}</p>
       <p>{result.date}</p>
       <p>Relevance: {result.score}</p>
+
+      {/* Regex info extraction */}
+      <div>
+        <input
+          type="text"
+          value={regex}
+          onChange={(e) => setRegex(e.target.value)}
+        />
+        <button className="feedback" onClick={handleRegexSubmit}>
+          Submit Regex
+        </button>
+        {regexResult && (
+          <p>
+            Regex result:{" "}
+            <div dangerouslySetInnerHTML={{ __html: regexResult }} />
+          </p>
+        )}
+      </div>
       <button className="feedback" onClick={() => handleFeedback(result.id, 1)}>
         👍
       </button>

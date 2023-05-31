@@ -267,7 +267,7 @@ const SearchResultItem: React.FC<SearchResultProps> = ({
           value={regex}
           onChange={(e) => setRegex(e.target.value)}
         />
-        <button className="feedback" onClick={handleRegexSubmit}>
+        <button className="regex" onClick={handleRegexSubmit}>
           Submit Regex
         </button>
         {regexResult && (

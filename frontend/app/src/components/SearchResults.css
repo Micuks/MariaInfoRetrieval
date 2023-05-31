@@ -67,3 +67,34 @@ button.feedback:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+input {
+  padding: 18px;
+  width: 30%;
+  height: 15px;
+  border: none;
+  border-radius: 30px;
+  box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.3);
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  font-size: 1rem;
+  color: #333;
+}
+
+button.regex {
+  width: auto;
+  padding: 11px;
+  border: none;
+  background-color: #007aff;
+  color: #fff;
+  border-radius: 30px;
+  padding-left: 10px;
+  padding-right: 10px;
+  margin: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+button.regex:hover {
+  background-color: #0051d6;
+}

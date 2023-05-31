@@ -2,7 +2,7 @@ package main
 
 import (
 	"MariaInfoRetrieval/data_process"
-	. "MariaInfoRetrieval/maria_types"
+	"MariaInfoRetrieval/maria_types"
 	"MariaInfoRetrieval/query_process"
 	"os"
 	"strconv"
@@ -98,9 +98,9 @@ func main() {
 
 	// Handle feedback
 	r.POST("/feedback", func(c *gin.Context) {
-		var feedback Feedback
+		var feedback maria_types.Feedback
 		if err := c.BindJSON(&feedback); err != nil {
-			c.JSON(400, gin.H{"error": "Failed to parse request body"})
+			c.JSON(400, gin.H{"error": "Failed to parse request body: " + err.Error()})
 			return
 		}
 
@@ -108,6 +108,34 @@ func main() {
 		log.Infof("Received feedback: %v", feedback)
 
 		c.JSON(200, gin.H{"message": "Feedback received successfully"})
+	})
+
+	// Handle entity feedback
+	r.POST("/entity_feedback", func(c *gin.Context) {
+		var feedback maria_types.EntityFeedback
+		if err := c.BindJSON(&feedback); err != nil {
+			c.JSON(400, gin.H{"error": "Failed to parse request body: " + err.Error()})
+			return
+		}
+
+		// Process the feedback here...
+		log.Infof("Received feedback: %v", feedback)
+
+		c.JSON(200, gin.H{"message": "Feedback for " + feedback.Entity + " received successfully"})
+	})
+
+	// Handle hot word feedback
+	r.POST("/hotword_feedback", func(c *gin.Context) {
+		var feedback maria_types.EntityFeedback
+		if err := c.BindJSON(&feedback); err != nil {
+			c.JSON(400, gin.H{"error": "Failed to parse request body: " + err.Error()})
+			return
+		}
+
+		// Process the feedback here...
+		log.Infof("Received feedback: %v", feedback)
+
+		c.JSON(200, gin.H{"message": "Feedback for " + feedback.Entity + "received successfully"})
 	})
 
 	r.Run(":9011")

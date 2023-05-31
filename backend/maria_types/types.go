@@ -34,6 +34,13 @@ type Feedback struct {
 	Score    int    `json:"Score"`
 }
 
+// Struct of entity feedback
+type EntityFeedback struct {
+	ResultId string `json:"resultId"`
+	Entity   string `json:"item"`
+	Score    int    `json:"score"`
+}
+
 // Struct of PerformSearch's response
 type SearchResponse struct {
 	Code    int            `json:"code"`
